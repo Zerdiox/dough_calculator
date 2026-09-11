@@ -10,7 +10,7 @@ val TomatoSoft = Color(0xFFFBE4DD)
 
 val GoldenWheat = Color(0xFFD9A441)
 val WheatDeep = Color(0xFF7A5A12)
-val WheatSoft = Color(0xFFF7E6C0)
+val WheatSoft = Color(0xFFF4DFA6)
 
 val Mozzarella = Color(0xFFFFFDF9)
 val MozzarellaLow = Color(0xFFFFFAF3)

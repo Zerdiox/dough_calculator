@@ -1,32 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A dough ball with a wheat ear; everything stays inside the icon's safe zone. -->
+<!-- Themed-icon version: the ball as a ring so the wheat ear stays readable in one colour. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#FFF6E8"
-        android:pathData="M21,55a33,33 0 1,0 66,0a33,33 0 1,0 -66,0" />
+        android:fillColor="#00000000"
+        android:pathData="M21,55a33,33 0 1,0 66,0a33,33 0 1,0 -66,0"
+        android:strokeWidth="6"
+        android:strokeColor="#000000" />
     <path
-        android:fillColor="#D9A441"
+        android:fillColor="#000000"
         android:pathData="M52.2,82 L52.2,34 L55.8,34 L55.8,82 Z" />
     <path
-        android:fillColor="#D9A441"
+        android:fillColor="#000000"
         android:pathData="M54,42 q12,-3 15,-12 q-12,0 -15,8 z" />
     <path
-        android:fillColor="#D9A441"
+        android:fillColor="#000000"
         android:pathData="M54,42 q-12,-3 -15,-12 q12,0 15,8 z" />
     <path
-        android:fillColor="#D9A441"
+        android:fillColor="#000000"
         android:pathData="M54,54 q12,-3 15,-12 q-12,0 -15,8 z" />
     <path
-        android:fillColor="#D9A441"
+        android:fillColor="#000000"
         android:pathData="M54,54 q-12,-3 -15,-12 q12,0 15,8 z" />
     <path
-        android:fillColor="#D9A441"
+        android:fillColor="#000000"
         android:pathData="M54,66 q12,-3 15,-12 q-12,0 -15,8 z" />
     <path
-        android:fillColor="#D9A441"
+        android:fillColor="#000000"
         android:pathData="M54,66 q-12,-3 -15,-12 q12,0 15,8 z" />
 </vector>
