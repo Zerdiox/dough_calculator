@@ -10,10 +10,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,13 +45,13 @@ fun FullRecipeScreen(
     var pizzaCount by rememberSaveable { mutableIntStateOf(initialRecipe.pizzaCount) }
     var ballWeightGrams by rememberSaveable { mutableIntStateOf(initialRecipe.ballWeightGrams) }
     val recipe = initialRecipe.copy(pizzaCount = pizzaCount, ballWeightGrams = ballWeightGrams)
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier = modifier
             .keepScreenOn()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = { Text(title) },
                 navigationIcon = { BackButton(onClick = onBack) },
                 scrollBehavior = scrollBehavior

@@ -6,19 +6,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -118,7 +116,7 @@ internal fun BakerPercentagesCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SectionHeader(title = "Baker's percentages", subtitle = "Relative to the flour weight")
+            SectionHeader(title = "Ingredients", subtitle = "As a percentage of the flour weight")
             PercentSlider(
                 label = "Hydration",
                 value = recipe.hydrationPercent,
@@ -199,15 +197,39 @@ private fun LabeledSlider(
                 color = MaterialTheme.colorScheme.primary
             )
         }
-        Slider(
-            value = value,
-            onValueChange = { onValueChange(scale.snap(it)) },
-            valueRange = scale.range
-        )
+        // The slider is for quick changes; the buttons fine-tune one step at a time.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = { onValueChange(scale.stepBy(value, steps = -1)) },
+                enabled = value > scale.range.start
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_remove),
+                    contentDescription = "Decrease $label"
+                )
+            }
+            Slider(
+                value = value,
+                onValueChange = { onValueChange(scale.snap(it)) },
+                valueRange = scale.range,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                onClick = { onValueChange(scale.stepBy(value, steps = 1)) },
+                enabled = value < scale.range.endInclusive
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_add),
+                    contentDescription = "Increase $label"
+                )
+            }
+        }
     }
 }
 
 /** A continuous slider range whose values snap to [step] without drawing a tick per step. */
 private data class SliderScale(val range: ClosedFloatingPointRange<Float>, val step: Float) {
     fun snap(value: Float) = ((value / step).roundToInt() * step).coerceIn(range)
+
+    fun stepBy(value: Float, steps: Int) = snap(value + steps * step)
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -39,9 +40,16 @@ private const val SMALL_AMOUNT_GRAMS = 10f
 // Tiny amounts (yeast) still get a visible sliver in the composition bar.
 private const val MIN_SEGMENT_FRACTION = 0.01f
 
-/** The hero card: total dough weight plus a breakdown per ingredient. */
+/**
+ * The hero card: total dough weight plus a breakdown per ingredient.
+ * [footer] is shown below the ingredients, for example an action button.
+ */
 @Composable
-internal fun DoughResultCard(recipe: DoughRecipe, modifier: Modifier = Modifier) {
+internal fun DoughResultCard(
+    recipe: DoughRecipe,
+    modifier: Modifier = Modifier,
+    footer: @Composable ColumnScope.() -> Unit = {}
+) {
     val ingredients = recipe.ingredients().filter { it.grams > 0f }
     val totalGrams by animateIntAsState(targetValue = recipe.totalDoughGrams, label = "totalDough")
     Card(
@@ -76,6 +84,7 @@ internal fun DoughResultCard(recipe: DoughRecipe, modifier: Modifier = Modifier)
                     IngredientRow(ingredient = ingredient)
                 }
             }
+            footer()
         }
     }
 }

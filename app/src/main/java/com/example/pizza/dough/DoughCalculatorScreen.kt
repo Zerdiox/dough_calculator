@@ -4,23 +4,26 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,34 +50,18 @@ fun DoughCalculatorContent(
     onOpenFullRecipe: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showSaveDialog by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { Text("Dough calculator") },
-                actions = {
-                    IconButton(onClick = { showSaveDialog = true }) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_bookmark),
-                            contentDescription = "Save recipe"
-                        )
-                    }
-                    IconButton(onClick = onOpenSavedRecipes) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_list),
-                            contentDescription = "Saved recipes"
-                        )
-                    }
-                },
+            CalculatorTopBar(
+                onSaveClick = { showSaveDialog = true },
+                onOpenSavedRecipes = onOpenSavedRecipes,
                 scrollBehavior = scrollBehavior
             )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = onOpenFullRecipe) { Text("Full recipe") }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
@@ -88,9 +75,16 @@ fun DoughCalculatorContent(
         ) {
             PizzaSizeCard(recipe = recipe, onRecipeChange = onRecipeChange)
             BakerPercentagesCard(recipe = recipe, onRecipeChange = onRecipeChange)
-            DoughResultCard(recipe = recipe)
-            // Keeps the last card clear of the floating button.
-            Spacer(modifier = Modifier.height(72.dp))
+            DoughResultCard(recipe = recipe) {
+                Button(
+                    onClick = onOpenFullRecipe,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Start kneading")
+                }
+            }
         }
         if (showSaveDialog) {
             SaveRecipeDialog(
@@ -103,6 +97,35 @@ fun DoughCalculatorContent(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CalculatorTopBar(
+    onSaveClick: () -> Unit,
+    onOpenSavedRecipes: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    modifier: Modifier = Modifier
+) {
+    TopAppBar(
+        title = { Text("Dough calculator") },
+        modifier = modifier,
+        actions = {
+            IconButton(onClick = onSaveClick) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_bookmark),
+                    contentDescription = "Save recipe"
+                )
+            }
+            IconButton(onClick = onOpenSavedRecipes) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_list),
+                    contentDescription = "Saved recipes"
+                )
+            }
+        },
+        scrollBehavior = scrollBehavior
+    )
 }
 
 @Composable
