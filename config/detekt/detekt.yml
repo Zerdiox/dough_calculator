@@ -1,5 +1,10 @@
 # Overrides on top of detekt's default config (buildUponDefaultConfig = true).
 
+complexity:
+  LongParameterList:
+    # Composables take an optional `modifier` (and other defaults) by convention.
+    ignoreDefaultParameters: true
+
 naming:
   FunctionNaming:
     # Composable functions are PascalCase by convention.
