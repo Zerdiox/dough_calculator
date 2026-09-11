@@ -8,11 +8,7 @@ local.properties
 
 # Android Studio / IntelliJ
 *.iml
-.idea/*
-!.idea/codeStyles/
-!.idea/inspectionProfiles/
-!.idea/runConfigurations.xml
-!.idea/.gitignore
+.idea/
 .navigation/
 captures/
 
