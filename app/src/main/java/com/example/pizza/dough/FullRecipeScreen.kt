@@ -66,7 +66,6 @@ fun FullRecipeScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DoughResultCard(recipe = recipe)
             PizzaSizeCard(
                 recipe = recipe,
                 onRecipeChange = {
@@ -74,6 +73,7 @@ fun FullRecipeScreen(
                     ballWeightGrams = it.ballWeightGrams
                 }
             )
+            DoughResultCard(recipe = recipe)
             Text(
                 text = "The screen stays on while this recipe is open.",
                 style = MaterialTheme.typography.bodySmall,

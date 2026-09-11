@@ -86,9 +86,9 @@ fun DoughCalculatorContent(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DoughResultCard(recipe = recipe)
             PizzaSizeCard(recipe = recipe, onRecipeChange = onRecipeChange)
             BakerPercentagesCard(recipe = recipe, onRecipeChange = onRecipeChange)
+            DoughResultCard(recipe = recipe)
             // Keeps the last card clear of the floating button.
             Spacer(modifier = Modifier.height(72.dp))
         }
