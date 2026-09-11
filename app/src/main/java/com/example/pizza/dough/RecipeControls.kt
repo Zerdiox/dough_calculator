@@ -1,5 +1,6 @@
 package com.example.pizza.dough
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,12 +13,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,12 +44,12 @@ internal fun PizzaSizeCard(
     onRecipeChange: (DoughRecipe) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
+    OutlinedCard(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionHeader(
                     title = "Pizzas",
-                    subtitle = "Number of dough balls",
+                    subtitle = "Dough balls",
                     modifier = Modifier.weight(1f)
                 )
                 PizzaCountStepper(
@@ -75,12 +76,12 @@ private fun PizzaCountStepper(
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        FilledTonalIconButton(onClick = { onCountChange(count - 1) }, enabled = count > 0) {
-            Icon(
-                painter = painterResource(R.drawable.ic_remove),
-                contentDescription = "Fewer pizzas"
-            )
-        }
+        StepButton(
+            icon = R.drawable.ic_remove,
+            contentDescription = "Fewer pizzas",
+            enabled = count > 0,
+            onClick = { onCountChange(count - 1) }
+        )
         AnimatedContent(
             targetState = count,
             transitionSpec = {
@@ -97,11 +98,12 @@ private fun PizzaCountStepper(
                 modifier = Modifier.widthIn(min = 56.dp)
             )
         }
-        FilledTonalIconButton(onClick = {
-            onCountChange(count + 1)
-        }, enabled = count < MAX_PIZZAS) {
-            Icon(painter = painterResource(R.drawable.ic_add), contentDescription = "More pizzas")
-        }
+        StepButton(
+            icon = R.drawable.ic_add,
+            contentDescription = "More pizzas",
+            enabled = count < MAX_PIZZAS,
+            onClick = { onCountChange(count + 1) }
+        )
     }
 }
 
@@ -111,7 +113,7 @@ internal fun BakerPercentagesCard(
     onRecipeChange: (DoughRecipe) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
+    OutlinedCard(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -148,7 +150,7 @@ internal fun BakerPercentagesCard(
 @Composable
 private fun SectionHeader(title: String, subtitle: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium)
+        Text(text = title, style = MaterialTheme.typography.headlineSmall)
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
@@ -198,32 +200,51 @@ private fun LabeledSlider(
             )
         }
         // The slider is for quick changes; the buttons fine-tune one step at a time.
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = { onValueChange(scale.stepBy(value, steps = -1)) },
-                enabled = value > scale.range.start
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_remove),
-                    contentDescription = "Decrease $label"
-                )
-            }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            StepButton(
+                icon = R.drawable.ic_remove,
+                contentDescription = "Decrease $label",
+                enabled = value > scale.range.start,
+                onClick = { onValueChange(scale.stepBy(value, steps = -1)) }
+            )
             Slider(
                 value = value,
                 onValueChange = { onValueChange(scale.snap(it)) },
                 valueRange = scale.range,
                 modifier = Modifier.weight(1f)
             )
-            IconButton(
-                onClick = { onValueChange(scale.stepBy(value, steps = 1)) },
-                enabled = value < scale.range.endInclusive
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_add),
-                    contentDescription = "Increase $label"
-                )
-            }
+            StepButton(
+                icon = R.drawable.ic_add,
+                contentDescription = "Increase $label",
+                enabled = value < scale.range.endInclusive,
+                onClick = { onValueChange(scale.stepBy(value, steps = 1)) }
+            )
         }
+    }
+}
+
+/** The one −/+ button style, shared by the pizza count and every slider. */
+@Composable
+private fun StepButton(
+    @DrawableRes icon: Int,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    FilledTonalIconButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = IconButtonDefaults.filledTonalIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    ) {
+        Icon(painter = painterResource(icon), contentDescription = contentDescription)
     }
 }
 

@@ -1,34 +1,35 @@
 package com.example.pizza.ui.theme
 
 import androidx.compose.material3.Typography
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.pizza.R
 
-// Set of Material typography styles to start with
+private val YoungSerif = FontFamily(Font(R.font.young_serif))
+
+private val Default = Typography()
+
+/** Young Serif for screen titles, card headings and the big numbers; the system font elsewhere. */
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+    displaySmall = Default.displaySmall.copy(
+        fontFamily = YoungSerif,
+        fontSize = 44.sp,
+        lineHeight = 52.sp
     ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+    headlineMedium = Default.headlineMedium.copy(
+        fontFamily = YoungSerif,
+        fontSize = 30.sp,
+        lineHeight = 36.sp
+    ),
+    headlineSmall = Default.headlineSmall.copy(
+        fontFamily = YoungSerif,
+        fontSize = 18.sp,
+        lineHeight = 24.sp
+    ),
+    titleLarge = Default.titleLarge.copy(
+        fontFamily = YoungSerif,
+        fontSize = 24.sp,
+        lineHeight = 30.sp
     )
-     */
 )
