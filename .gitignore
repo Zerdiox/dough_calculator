@@ -1,0 +1,44 @@
+# Gradle
+.gradle/
+.kotlin/
+build/
+
+# Local configuration (SDK path, machine-specific)
+local.properties
+
+# Android Studio / IntelliJ
+*.iml
+.idea/*
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+!.idea/runConfigurations.xml
+!.idea/.gitignore
+.navigation/
+captures/
+
+# Native builds
+.externalNativeBuild/
+.cxx/
+
+# Signing keys
+*.jks
+*.keystore
+
+# Build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+output-metadata.json
+
+# Logs and profiling
+*.log
+*.hprof
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
