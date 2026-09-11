@@ -19,6 +19,7 @@ captures/
 # Signing keys
 *.jks
 *.keystore
+keystore.properties
 
 # Build outputs
 *.apk
