@@ -24,13 +24,15 @@ flour = total dough / (1 + (hydration + salt + yeast + oil) / 100)
   the saved recipe.
 
 The current recipe and the saved ones are written to `dough.json` via DataStore,
-so they survive a restart. Nothing leaves the device and there is no account.
+so they survive a restart. The app asks for no permissions and has no account;
+it does inherit Android's Auto Backup, so `dough.json` rides along to Google
+Drive with the rest of the device backup.
 
 ## Building
 
-Needs the Android SDK. The Gradle daemon is pinned to Java 25, which the
-foojay toolchain resolver downloads on the first run if you don't have it.
-Everything goes through the wrapper:
+Needs the Android SDK. The Gradle daemon is pinned to Java 25, which Gradle
+downloads on the first run if you do not have it. Everything goes through the
+wrapper:
 
 ```
 ./gradlew :app:assembleDebug
