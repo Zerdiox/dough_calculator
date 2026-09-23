@@ -39,3 +39,6 @@ output-metadata.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Generated signing material, never commit
+.secrets-temp/
