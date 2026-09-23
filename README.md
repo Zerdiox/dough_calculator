@@ -60,6 +60,11 @@ root, holding `storeFile`, `storePassword`, `keyAlias` and `keyPassword`. That
 file and the keystore it points at are kept out of git, so a fresh clone builds
 debug but produces an unsigned release.
 
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which rebuilds the
+signed APK and attaches it to a GitHub release. It reads the same four values
+from repository secrets instead: `KEYSTORE_BASE64` (the keystore itself,
+base64-encoded), `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`.
+
 ## Stack
 
 Kotlin and Jetpack Compose with Material 3, `ViewModel` for state, DataStore
