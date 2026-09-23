@@ -1,5 +1,6 @@
 # Dough Calculator
 
+[![Release](https://github.com/Zerdiox/dough_calculator/actions/workflows/release.yml/badge.svg)](https://github.com/Zerdiox/dough_calculator/actions/workflows/release.yml)
 ![Android 16 and newer](https://img.shields.io/badge/Android-16%2B-3DDC84?logo=android&logoColor=white)
 ![Kotlin 2.4.20](https://img.shields.io/badge/Kotlin-2.4.20-7F52FF?logo=kotlin&logoColor=white)
 ![Compose BOM 2026.09.00](https://img.shields.io/badge/Compose%20BOM-2026.09.00-4285F4?logo=jetpackcompose&logoColor=white)
