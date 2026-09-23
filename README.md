@@ -30,15 +30,30 @@ Drive with the rest of the device backup.
 
 ## Building
 
-Needs the Android SDK. The Gradle daemon is pinned to Java 25, which Gradle
-downloads on the first run if you do not have it. Everything goes through the
-wrapper:
+The least fiddly route is Android Studio: clone the repo, `File > Open`, and it
+writes the SDK path for you and offers to download anything missing. Then Run.
+
+From the command line you have to point the build at your SDK first, because
+`local.properties` is machine-specific and deliberately not in git:
 
 ```
+git clone https://github.com/Zerdiox/dough_calculator.git
+cd dough_calculator
+echo "sdk.dir=/path/to/Android/Sdk" > local.properties
 ./gradlew :app:assembleDebug
 ```
 
-`minSdk` is 36, so the app installs on Android 16 and newer.
+Skip that third line and the build stops with `SDK location not found`. On
+Windows, write the path with forward slashes: a `.properties` file reads a
+backslash as an escape character, so `C:\Users\...` fails less helpfully, with
+`java.io.IOException: Invalid file path`.
+
+Nothing else needs installing. The wrapper fetches Gradle, the daemon's Java 25
+comes down on the first run, and debug builds need no signing key. The APK ends
+up in `app/build/outputs/apk/debug/`.
+
+`minSdk` is 36, so the app only installs on Android 16 and newer, which is a
+narrow slice of phones today.
 
 Release builds are signed only if a `keystore.properties` exists in the project
 root, holding `storeFile`, `storePassword`, `keyAlias` and `keyPassword`. That
