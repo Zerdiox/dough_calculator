@@ -1,5 +1,11 @@
 # Dough Calculator
 
+![Android 16 and newer](https://img.shields.io/badge/Android-16%2B-3DDC84?logo=android&logoColor=white)
+![Kotlin 2.4.20](https://img.shields.io/badge/Kotlin-2.4.20-7F52FF?logo=kotlin&logoColor=white)
+![Compose BOM 2026.09.00](https://img.shields.io/badge/Compose%20BOM-2026.09.00-4285F4?logo=jetpackcompose&logoColor=white)
+![Android Gradle plugin 9.4.1](https://img.shields.io/badge/AGP-9.4.1-3DDC84?logo=androidstudio&logoColor=white)
+![Gradle 9.6.0](https://img.shields.io/badge/Gradle-9.6.0-02303A?logo=gradle&logoColor=white)
+
 An Android app that works out how much flour, water, salt, yeast and oil to
 weigh out for a batch of pizza dough.
 
