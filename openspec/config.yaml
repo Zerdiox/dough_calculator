@@ -1,0 +1,53 @@
+schema: spec-driven
+
+context: |
+  Dough Calculator: a personal Android app that works out flour, water, salt, yeast and oil weights
+  for a batch of pizza dough from baker's percentages, with saved recipes and a full-recipe screen.
+  Kotlin, Jetpack Compose with Material 3, ViewModel, DataStore with kotlinx.serialization, and
+  Navigation 3. minSdk 36, English only, no permissions, no account; built for one kitchen.
+  `./gradlew check` is the gate before any commit.
+
+  How OpenSpec is used here:
+  - A change's artifacts are the plan; don't also run superpowers brainstorming or writing-plans.
+    TDD and verification-before-completion still govern apply.
+  - Subagents are welcome for read-only work in any command: codebase and Android/Jetpack Compose
+    research during explore, propose and apply (fan out independent lookups), and during apply a
+    review of the finished diff against the change's specs and design. Writing artifacts and
+    implementation stay in the main session, one task at a time, since tasks share files and the
+    build.
+  - Every write needs Kenny's explicit go: before propose, before apply, before archive.
+  - openspec/changes/ is transient scratch: code, config and docs never cite it. openspec/specs/ is
+    durable intended behaviour.
+  - Nothing here commits; Kenny does every git write.
+  - Read the library's actual source or docs (https://developer.android.com/jetpack/androidx) before
+    relying on an API, especially Navigation 3, the Compose BOM and the alpha Detekt 2 plugin.
+
+  Follow-ups: out-of-scope issues (bugs, tech debt, test gaps, ideas) are tracked as individual
+  files in openspec/backlog/followup/, which is working notes like openspec/changes/: code, config
+  and docs never cite it. Read openspec/backlog/followup/README.md before creating, updating or
+  resolving one, and follow its rules. Before proposing a change, check for open follow-ups with a
+  matching capability. A follow-up is a write like any other: list candidates in the summary and
+  record them only on Kenny's go (usually via /backlog add).
+
+rules:
+  specs:
+    - A spec states how the app SHOULD behave, never how it is
+      built. Code is the truth for how it works.
+    - Name no class, file, API or build task. Describe what a user sees and does in
+      the app.
+    - One capability per folder, named for what a user can do, not for a source package.
+    - If code and spec disagree, report it as a finding. Never edit a spec to match the code.
+  proposal:
+    - Include an "Out of Scope / Deferred" section. Reference existing follow-ups by ID; list new
+      candidates for Kenny to approve as follow-ups rather than creating them.
+    - List any follow-up IDs this change resolves under "Resolves", and resolve them as described
+      in openspec/backlog/followup/README.md.
+  design:
+    - Say why, not history. Nothing in design.md may be cited from code later.
+  tasks:
+    - Tests first where behaviour changes (TDD); the last implementation task is
+      `./gradlew check` green.
+    - Manual checks in the app are tasks too, written as a concrete checklist.
+    - After them, a final "Follow-up harvest" group with one task — "List each out-of-scope issue
+      discovered during implementation as a follow-up candidate in the completion summary; record
+      them (see openspec/backlog/followup/README.md) on Kenny's go."

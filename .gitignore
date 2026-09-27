@@ -42,3 +42,7 @@ desktop.ini
 
 # Generated signing material, never commit
 .secrets-temp/
+
+# Resolved follow-ups — kept locally so old IDs stay readable, never committed
+/openspec/backlog/followup/resolved/*
+!/openspec/backlog/followup/resolved/.gitkeep
