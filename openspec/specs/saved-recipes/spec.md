@@ -1,11 +1,11 @@
-# Spec Delta
+# saved-recipes Specification
 
 ## Purpose
 
 Lets the user keep dough recipes under a name, find them again, follow or change them, and remove the
 ones they no longer want, without ever losing a recipe to an app update.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: What a saved recipe holds
 A saved recipe SHALL hold a name, a number of portions, a portion weight and a percentage for every
@@ -18,12 +18,13 @@ adjustable ingredient.
 ### Requirement: Saved recipes list
 The user SHALL reach the saved recipes from the calculator. The list SHALL show the recipes in the
 order they were saved, oldest first. Each entry SHALL show the recipe's name and a summary reading
-"<portions> × <weight> g · <water>% water", with the water percentage shown with at most one decimal.
+"<portions> × <weight> g · <water>% hydration", with the water percentage shown with at most one
+decimal.
 Back SHALL return to the calculator.
 
 #### Scenario: Entry summary
 - **WHEN** "Friday night" has 4 portions of 250 g and 62% water
-- **THEN** its entry shows "Friday night" and "4 × 250 g · 62% water"
+- **THEN** its entry shows "Friday night" and "4 × 250 g · 62% hydration"
 
 #### Scenario: Newest recipe last
 - **WHEN** the user saves "A" and then "B"

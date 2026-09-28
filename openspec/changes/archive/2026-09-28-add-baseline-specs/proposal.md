@@ -51,6 +51,8 @@ Where the app differs from these specs, tracked as follow-ups:
 - **F5**: unreadable stored data silently resets all saved recipes; the specs require recipes to
   survive app updates. Matters most for the coming ingredient change, which must migrate saved
   recipes.
+- **F8**: the saved recipes summary says "62% water"; the specs call the water percentage
+  "hydration" there, as the calculator already does.
 
 ## Resolves
 

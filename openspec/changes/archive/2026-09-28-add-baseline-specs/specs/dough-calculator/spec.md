@@ -40,9 +40,14 @@ current value in grams.
 
 ### Requirement: Ingredient percentage controls
 For every adjustable ingredient, the calculator SHALL show its name, its current percentage, a
-slider across its range, and − and + buttons that move one step. The slider SHALL snap to the
-ingredient's step. The − button SHALL be disabled at the bottom of the range and the + button at the
-top.
+slider across its range, and − and + buttons that move one step. Water's control SHALL be labelled
+"Hydration"; every other ingredient's control SHALL use the ingredient's name. The slider SHALL snap
+to the ingredient's step. The − button SHALL be disabled at the bottom of the range and the + button
+at the top.
+
+#### Scenario: Water is labelled as hydration
+- **WHEN** the calculator shows water at 62%
+- **THEN** its control reads "Hydration" and "62%"
 
 #### Scenario: Buttons move one step
 - **WHEN** salt is 3% and the user taps + next to salt
