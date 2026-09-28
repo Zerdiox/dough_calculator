@@ -30,16 +30,17 @@ import androidx.compose.ui.unit.dp
 import com.example.pizza.R
 import kotlin.math.roundToInt
 
-private const val MAX_PIZZAS = 50
+private const val MIN_PORTIONS = 1
+private const val MAX_PORTIONS = 50
 
-private val BallWeightScale = SliderScale(range = 100f..500f, step = 10f)
+private val PortionWeightScale = SliderScale(range = 100f..500f, step = 10f)
 private val HydrationScale = SliderScale(range = 50f..90f, step = 1f)
 private val SaltScale = SliderScale(range = 0f..5f, step = 0.1f)
 private val YeastScale = SliderScale(range = 0f..3f, step = 0.05f)
 private val OilScale = SliderScale(range = 0f..6f, step = 0.5f)
 
 @Composable
-internal fun PizzaSizeCard(
+internal fun PortionsCard(
     recipe: DoughRecipe,
     onRecipeChange: (DoughRecipe) -> Unit,
     modifier: Modifier = Modifier
@@ -48,29 +49,31 @@ internal fun PizzaSizeCard(
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionHeader(
-                    title = "Pizzas",
-                    subtitle = "Dough balls",
+                    title = "Portions",
+                    subtitle = "How many, and how heavy",
                     modifier = Modifier.weight(1f)
                 )
-                PizzaCountStepper(
-                    count = recipe.pizzaCount,
-                    onCountChange = { onRecipeChange(recipe.copy(pizzaCount = it)) }
+                PortionStepper(
+                    count = recipe.portionCount,
+                    onCountChange = { onRecipeChange(recipe.copy(portionCount = it)) }
                 )
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             LabeledSlider(
-                label = "Dough ball weight",
-                valueText = "${recipe.ballWeightGrams} g",
-                value = recipe.ballWeightGrams.toFloat(),
-                scale = BallWeightScale,
-                onValueChange = { onRecipeChange(recipe.copy(ballWeightGrams = it.roundToInt())) }
+                label = "Portion weight",
+                valueText = "${recipe.portionWeightGrams} g",
+                value = recipe.portionWeightGrams.toFloat(),
+                scale = PortionWeightScale,
+                onValueChange = {
+                    onRecipeChange(recipe.copy(portionWeightGrams = it.roundToInt()))
+                }
             )
         }
     }
 }
 
 @Composable
-private fun PizzaCountStepper(
+private fun PortionStepper(
     count: Int,
     onCountChange: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -78,8 +81,8 @@ private fun PizzaCountStepper(
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         StepButton(
             icon = R.drawable.ic_remove,
-            contentDescription = "Fewer pizzas",
-            enabled = count > 0,
+            contentDescription = "Fewer portions",
+            enabled = count > MIN_PORTIONS,
             onClick = { onCountChange(count - 1) }
         )
         AnimatedContent(
@@ -89,7 +92,7 @@ private fun PizzaCountStepper(
                 (slideInVertically { height -> direction * height } + fadeIn())
                     .togetherWith(slideOutVertically { height -> -direction * height } + fadeOut())
             },
-            label = "pizzaCount"
+            label = "portionCount"
         ) { value ->
             Text(
                 text = "$value",
@@ -100,8 +103,8 @@ private fun PizzaCountStepper(
         }
         StepButton(
             icon = R.drawable.ic_add,
-            contentDescription = "More pizzas",
-            enabled = count < MAX_PIZZAS,
+            contentDescription = "More portions",
+            enabled = count < MAX_PORTIONS,
             onClick = { onCountChange(count + 1) }
         )
     }
@@ -226,7 +229,7 @@ private fun LabeledSlider(
     }
 }
 
-/** The one −/+ button style, shared by the pizza count and every slider. */
+/** The one −/+ button style, shared by the portion count and every slider. */
 @Composable
 private fun StepButton(
     @DrawableRes icon: Int,

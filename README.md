@@ -12,8 +12,8 @@ weigh out for a batch of pizza dough.
 
 Recipes are stored as baker's percentages, where every ingredient is expressed
 relative to the flour weight and flour itself is always 100%. That makes a
-recipe independent of batch size: you set how many pizzas you want and how
-heavy each dough ball should be, and the app solves for the flour weight that
+recipe independent of batch size: you set how many portions you want and how
+heavy each portion should be, and the app solves for the flour weight that
 produces that total, then scales the rest.
 
 ```

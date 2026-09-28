@@ -72,7 +72,7 @@ fun DoughCalculatorContent(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            PizzaSizeCard(recipe = recipe, onRecipeChange = onRecipeChange)
+            PortionsCard(recipe = recipe, onRecipeChange = onRecipeChange)
             BakerPercentagesCard(recipe = recipe, onRecipeChange = onRecipeChange)
             DoughResultCard(recipe = recipe)
             Button(

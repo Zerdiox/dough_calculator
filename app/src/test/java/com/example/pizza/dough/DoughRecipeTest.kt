@@ -5,8 +5,8 @@ import org.junit.Test
 
 class DoughRecipeTest {
     private val recipe = DoughRecipe(
-        pizzaCount = 4,
-        ballWeightGrams = 250,
+        portionCount = 4,
+        portionWeightGrams = 250,
         hydrationPercent = 65f,
         saltPercent = 3f,
         yeastPercent = 0.2f,
@@ -39,15 +39,15 @@ class DoughRecipeTest {
     }
 
     @Test
-    fun zeroPizzasNeedNoDough() {
-        val amounts = recipe.copy(pizzaCount = 0).amounts()
+    fun zeroPortionsNeedNoDough() {
+        val amounts = recipe.copy(portionCount = 0).amounts()
         assertEquals(0f, amounts.flour, 0f)
         assertEquals(0f, amounts.water, 0f)
     }
 
     @Test
-    fun moreSavedPizzasScaleEveryIngredient() {
-        val doubled = recipe.copy(pizzaCount = 8).amounts()
+    fun morePortionsScaleEveryIngredient() {
+        val doubled = recipe.copy(portionCount = 8).amounts()
         assertEquals(recipe.amounts().flour * 2, doubled.flour, 0.01f)
     }
 }

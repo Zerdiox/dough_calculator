@@ -66,7 +66,7 @@ private fun TotalBar(recipe: DoughRecipe, modifier: Modifier = Modifier) {
                 color = textColor.copy(alpha = 0.85f)
             )
             Text(
-                text = "${recipe.pizzaCount} × ${recipe.ballWeightGrams} g",
+                text = "${recipe.portionCount} × ${recipe.portionWeightGrams} g",
                 style = MaterialTheme.typography.bodyMedium,
                 color = textColor.copy(alpha = 0.85f)
             )

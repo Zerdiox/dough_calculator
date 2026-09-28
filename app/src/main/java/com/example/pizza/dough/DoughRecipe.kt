@@ -1,23 +1,25 @@
 package com.example.pizza.dough
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 private const val PERCENT = 100f
 
 /**
- * A pizza dough recipe in baker's percentages: every ingredient is expressed
+ * A dough recipe in baker's percentages: every ingredient is expressed
  * relative to the flour weight, so flour is always 100%.
  */
 @Serializable
 data class DoughRecipe(
-    val pizzaCount: Int,
-    val ballWeightGrams: Int,
+    // Stored under their original keys so recipes saved by earlier versions still load.
+    @SerialName("pizzaCount") val portionCount: Int,
+    @SerialName("ballWeightGrams") val portionWeightGrams: Int,
     val hydrationPercent: Float,
     val saltPercent: Float,
     val yeastPercent: Float,
     val oilPercent: Float
 ) {
-    val totalDoughGrams: Int get() = pizzaCount * ballWeightGrams
+    val totalDoughGrams: Int get() = portionCount * portionWeightGrams
 
     fun amounts(): DoughAmounts {
         val otherPercent = hydrationPercent + saltPercent + yeastPercent + oilPercent
@@ -42,8 +44,8 @@ data class DoughAmounts(
 )
 
 val DefaultDoughRecipe = DoughRecipe(
-    pizzaCount = 4,
-    ballWeightGrams = 250,
+    portionCount = 4,
+    portionWeightGrams = 250,
     hydrationPercent = 62f,
     saltPercent = 3f,
     yeastPercent = 0.2f,

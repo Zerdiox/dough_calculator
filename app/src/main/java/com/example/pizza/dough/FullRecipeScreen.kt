@@ -31,7 +31,7 @@ import com.example.pizza.R
 import com.example.pizza.ui.theme.PizzaTheme
 
 /**
- * The recipe to follow while making dough. Pizza count and ball weight can be changed here
+ * The recipe to follow while making dough. Portions and portion weight can be changed here
  * to re-calculate, without changing the saved recipe. The screen stays on while it's shown.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,9 +42,14 @@ fun FullRecipeScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var pizzaCount by rememberSaveable { mutableIntStateOf(initialRecipe.pizzaCount) }
-    var ballWeightGrams by rememberSaveable { mutableIntStateOf(initialRecipe.ballWeightGrams) }
-    val recipe = initialRecipe.copy(pizzaCount = pizzaCount, ballWeightGrams = ballWeightGrams)
+    var portionCount by rememberSaveable { mutableIntStateOf(initialRecipe.portionCount) }
+    var portionWeightGrams by rememberSaveable {
+        mutableIntStateOf(initialRecipe.portionWeightGrams)
+    }
+    val recipe = initialRecipe.copy(
+        portionCount = portionCount,
+        portionWeightGrams = portionWeightGrams
+    )
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier = modifier
@@ -66,11 +71,11 @@ fun FullRecipeScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            PizzaSizeCard(
+            PortionsCard(
                 recipe = recipe,
                 onRecipeChange = {
-                    pizzaCount = it.pizzaCount
-                    ballWeightGrams = it.ballWeightGrams
+                    portionCount = it.portionCount
+                    portionWeightGrams = it.portionWeightGrams
                 }
             )
             DoughResultCard(recipe = recipe)

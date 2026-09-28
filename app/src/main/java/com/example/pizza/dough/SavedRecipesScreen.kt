@@ -154,7 +154,7 @@ private fun DeleteRecipeDialog(
 }
 
 private fun DoughRecipe.summary() =
-    "$pizzaCount × $ballWeightGrams g · ${hydrationPercent.formatDecimals(1)}% water"
+    "$portionCount × $portionWeightGrams g · ${hydrationPercent.formatDecimals(1)}% hydration"
 
 @Preview(showBackground = true)
 @Composable
