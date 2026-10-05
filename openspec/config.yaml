@@ -1,8 +1,9 @@
 schema: spec-driven
 
 context: |
-  Dough Calculator: a personal Android app that works out flour, water, salt, yeast and oil weights
-  for a batch of pizza dough from baker's percentages, with saved recipes and a full-recipe screen.
+  Dough Calculator: a personal Android app that works out ingredient weights for a batch of pizza
+  dough from baker's percentages. Flour (100%) and water are fixed; every other ingredient is named
+  per recipe, with a shared list of saved ingredient names. Saved recipes and a full-recipe screen.
   Kotlin, Jetpack Compose with Material 3, ViewModel, DataStore with kotlinx.serialization, and
   Navigation 3. minSdk 36, English only, no permissions, no account; built for one kitchen.
   `./gradlew check` is the gate before any commit.
