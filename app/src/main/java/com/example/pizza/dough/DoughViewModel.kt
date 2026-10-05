@@ -21,8 +21,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Holds the calculator and saved recipes for the screens. Writes run in [writeScope], which outlives
- * this ViewModel, so a write still finishes when the screen that started it closes.
+ * Holds the calculator and saved recipes for the screens. Writes run in [writeScope], which
+ * outlives this ViewModel, so a write still finishes when the screen that started it closes.
  */
 class DoughViewModel(
     private val repository: DoughRepository,
@@ -46,6 +46,16 @@ class DoughViewModel(
         .map { it.loadedRecipe }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
+    /** The saved ingredients, sorted ignoring case, or `null` while they are still loading. */
+    val savedIngredients: StateFlow<List<String>?> = repository.savedIngredients
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+
+    /**
+     * The calculator's ingredient list while it is edited. Kept here so it survives rotation; it
+     * is not stored, so closing the app drops it.
+     */
+    val ingredientEditing = IngredientEditing(onFinish = ::updateRecipe)
+
     /** Whether the user still has to be told that unreadable data was set aside. */
     val resetMessagePending: StateFlow<Boolean> = repository.data
         .map { it.resetMessagePending }
@@ -53,7 +63,7 @@ class DoughViewModel(
 
     fun updateRecipe(recipe: DoughRecipe) {
         editedRecipe.value = recipe
-        // Saving waits for a short pause, so dragging a slider doesn't write to disk every frame.
+        // Saving waits for a short pause, so typing or stepping doesn't write on every change.
         writeCalculator {
             delay(SAVE_DEBOUNCE_MILLIS)
             repository.saveCurrentRecipe(recipe)
@@ -66,12 +76,22 @@ class DoughViewModel(
         writeCalculator { withContext(NonCancellable) { repository.loadRecipe(savedRecipe) } }
     }
 
-    fun saveRecipe(name: String, recipe: DoughRecipe) {
-        writeScope.launch { repository.saveRecipe(name, recipe) }
+    /** Saves [recipe] as new, adding [namesToSave] to the saved ingredients. */
+    fun saveRecipe(name: String, recipe: DoughRecipe, namesToSave: Set<String>) {
+        writeScope.launch { repository.saveRecipe(name, recipe, namesToSave) }
     }
 
-    fun updateSavedRecipe(id: String, recipe: DoughRecipe) {
-        writeScope.launch { repository.updateSavedRecipe(id, recipe) }
+    /** Updates the saved recipe [id], adding [namesToSave] to the saved ingredients. */
+    fun updateSavedRecipe(id: String, recipe: DoughRecipe, namesToSave: Set<String>) {
+        writeScope.launch { repository.updateSavedRecipe(id, recipe, namesToSave) }
+    }
+
+    fun deleteSavedIngredient(name: String) {
+        writeScope.launch { repository.deleteSavedIngredient(name) }
+    }
+
+    fun restoreSavedIngredient(name: String) {
+        writeScope.launch { repository.restoreSavedIngredient(name) }
     }
 
     fun dismissResetMessage() {

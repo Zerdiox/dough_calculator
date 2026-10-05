@@ -17,10 +17,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -48,6 +46,7 @@ fun SavedRecipesScreen(
     onEditRecipe: (SavedRecipe) -> Unit,
     onDeleteRecipe: (SavedRecipe) -> Unit,
     onRestoreRecipe: (SavedRecipe, Int) -> Unit,
+    onOpenSavedIngredients: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -60,7 +59,15 @@ fun SavedRecipesScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Saved recipes") },
-                navigationIcon = { BackButton(onClick = onBack) }
+                navigationIcon = { BackButton(onClick = onBack) },
+                actions = {
+                    IconButton(onClick = onOpenSavedIngredients) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_list_alt),
+                            contentDescription = "Saved ingredients"
+                        )
+                    }
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -91,16 +98,8 @@ fun SavedRecipesScreen(
                     val index = savedRecipes.indexOfFirst { it.id == savedRecipe.id }
                     onDeleteRecipe(savedRecipe)
                     recipeToDelete = null
-                    // Messages queue up, so the previous one has to go before this one can show.
-                    snackbarHostState.currentSnackbarData?.dismiss()
                     scope.launch {
-                        val result = snackbarHostState.showSnackbar(
-                            message = "Deleted \"${savedRecipe.name}\"",
-                            actionLabel = "Undo",
-                            // With an action, the message would otherwise stay until dismissed.
-                            duration = SnackbarDuration.Long
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
+                        if (snackbarHostState.showUndoMessage("Deleted \"${savedRecipe.name}\"")) {
                             onRestoreRecipe(savedRecipe, index)
                         }
                     }
@@ -178,8 +177,10 @@ private fun DeleteRecipeDialog(
     )
 }
 
-private fun DoughRecipe.summary() =
-    "$portionCount × $portionWeightGrams g · ${hydrationPercent.formatDecimals(1)}% hydration"
+private fun DoughRecipe.summary(): String {
+    val water = hydration.roundedText(maxDecimals = 1)
+    return "$portionCount × $portionWeightGrams g · $water% hydration"
+}
 
 @Preview(showBackground = true)
 @Composable
@@ -193,6 +194,7 @@ private fun SavedRecipesScreenPreview() {
             onEditRecipe = {},
             onDeleteRecipe = {},
             onRestoreRecipe = { _, _ -> },
+            onOpenSavedIngredients = {},
             onBack = {}
         )
     }

@@ -38,6 +38,7 @@ class UndoDeleteRecipeTest {
                     savedRecipes = savedRecipes - it
                 },
                 onRestoreRecipe = { savedRecipe, index -> restored += savedRecipe to index },
+                onOpenSavedIngredients = {},
                 onBack = {}
             )
         }
@@ -102,7 +103,9 @@ class UndoDeleteRecipeTest {
         val fridayNight = SavedRecipe(
             id = "a1",
             name = "Friday night",
-            recipe = DefaultDoughRecipe.copy(hydrationPercent = 65f)
+            recipe = DefaultDoughRecipe.copy(
+                hydration = Percentage(hundredths = 6500, decimals = 0)
+            )
         )
         val party = SavedRecipe(
             id = "b2",

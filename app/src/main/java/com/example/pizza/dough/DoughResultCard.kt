@@ -23,24 +23,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.math.RoundingMode
 
-private const val FLOUR_PERCENT = 100f
-private const val SMALL_AMOUNT_GRAMS = 10f
 private const val LABEL_COLUMN_FRACTION = 0.46f
 private val RowHeight = 48.dp
 
 /** The recipe card: the total on a tomato header bar above a table of ingredient weights. */
 @Composable
 internal fun DoughResultCard(recipe: DoughRecipe, modifier: Modifier = Modifier) {
-    val ingredients = recipe.ingredients().filter { it.grams > 0f }
+    val rows = weightRows(recipe)
     OutlinedCard(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
         Column(modifier = Modifier.animateContentSize()) {
             TotalBar(recipe = recipe)
-            ingredients.forEachIndexed { index, ingredient ->
-                key(ingredient.name) {
+            rows.forEachIndexed { index, row ->
+                key(row.name) {
                     if (index > 0) HorizontalDivider()
-                    IngredientRow(ingredient = ingredient)
+                    IngredientRow(row = row)
                 }
             }
         }
@@ -81,11 +78,11 @@ private fun TotalBar(recipe: DoughRecipe, modifier: Modifier = Modifier) {
 
 /** One table row: a wheat label cell, the baker's percentage, and the weight. */
 @Composable
-private fun IngredientRow(ingredient: Ingredient, modifier: Modifier = Modifier) {
-    val grams by animateFloatAsState(
-        targetValue = ingredient.grams,
-        label = "${ingredient.name} grams"
-    )
+private fun IngredientRow(row: WeightRow, modifier: Modifier = Modifier) {
+    val target = row.grams.toFloat()
+    val grams by animateFloatAsState(targetValue = target, label = "${row.name} grams")
+    // Once settled, show the exact weight's text: the Float could round the other way.
+    val gramsText = if (grams == target) row.gramsText else formatGrams(grams.toDouble())
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -101,13 +98,13 @@ private fun IngredientRow(ingredient: Ingredient, modifier: Modifier = Modifier)
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                text = ingredient.name,
+                text = row.name,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
             )
         }
         Text(
-            text = "${ingredient.percent.formatDecimals(2)}%",
+            text = row.percentText,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -115,34 +112,10 @@ private fun IngredientRow(ingredient: Ingredient, modifier: Modifier = Modifier)
                 .padding(start = 16.dp)
         )
         Text(
-            text = formatGrams(grams),
+            text = gramsText,
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.End,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 }
-
-private data class Ingredient(val name: String, val grams: Float, val percent: Float)
-
-private fun DoughRecipe.ingredients(): List<Ingredient> {
-    val amounts = amounts()
-    return listOf(
-        Ingredient(name = "Flour", grams = amounts.flour, percent = FLOUR_PERCENT),
-        Ingredient(name = "Water", grams = amounts.water, percent = hydrationPercent),
-        Ingredient(name = "Salt", grams = amounts.salt, percent = saltPercent),
-        Ingredient(name = "Yeast", grams = amounts.yeast, percent = yeastPercent),
-        Ingredient(name = "Olive oil", grams = amounts.oil, percent = oilPercent)
-    )
-}
-
-private fun formatGrams(grams: Float): String {
-    val decimals = if (grams < SMALL_AMOUNT_GRAMS) 1 else 0
-    return "${grams.formatDecimals(decimals)} g"
-}
-
-/** Rounds to at most [decimals] decimals and drops trailing zeros: 2.50 → "2.5", 62.0 → "62". */
-internal fun Float.formatDecimals(decimals: Int): String = toBigDecimal()
-    .setScale(decimals, RoundingMode.HALF_UP)
-    .stripTrailingZeros()
-    .toPlainString()

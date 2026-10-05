@@ -67,8 +67,68 @@ class DoughRepositoryTest {
     fun updatingADeletedRecipeChangesNothing() = runBlocking {
         repository.deleteRecipe(party.id)
         val before = repository.data.first()
-        repository.updateSavedRecipe(party.id, wetter)
+        repository.updateSavedRecipe(party.id, wetter, namesToSave = setOf("Honey"))
         assertEquals(before, repository.data.first())
+    }
+
+    @Test
+    fun savingWithNamesStoresTheRecipeAndTheNamesTogether() = runBlocking {
+        repository.saveRecipe("Honey", withHoney, namesToSave = setOf("Honey"))
+        // One write: the file on disk holds both, not just the data the repository caches.
+        val stored = DoughDataSerializer().readFrom(dataFile.inputStream())
+        assertEquals(withHoney, stored.savedRecipes.last().recipe)
+        assertEquals(listOf("Olive oil", "Salt", "Yeast", "Honey"), stored.savedIngredients)
+    }
+
+    @Test
+    fun updatingWithNamesStoresTheRecipeAndTheNamesTogether() = runBlocking {
+        repository.updateSavedRecipe(fridayNight.id, withHoney, namesToSave = setOf("Honey"))
+        val stored = DoughDataSerializer().readFrom(dataFile.inputStream())
+        assertEquals(withHoney, stored.savedRecipes.first().recipe)
+        assertEquals(listOf("Olive oil", "Salt", "Yeast", "Honey"), stored.savedIngredients)
+    }
+
+    @Test
+    fun savingWithoutNamesKeepsTheSavedIngredients() = runBlocking {
+        repository.saveRecipe("Honey", withHoney, namesToSave = emptySet())
+        assertEquals(listOf("Olive oil", "Salt", "Yeast"), repository.data.first().savedIngredients)
+    }
+
+    @Test
+    fun addingANameSavedInAnotherCaseChangesNothing() = runBlocking {
+        val before = repository.data.first().savedIngredients
+        repository.restoreSavedIngredient("salt")
+        repository.saveRecipe("Salty", DefaultDoughRecipe, namesToSave = setOf("YEAST"))
+        assertEquals(before, repository.data.first().savedIngredients)
+    }
+
+    @Test
+    fun deletedIngredientCanBeAddedBack() = runBlocking {
+        repository.deleteSavedIngredient("Salt")
+        assertEquals(listOf("Olive oil", "Yeast"), repository.data.first().savedIngredients)
+        repository.restoreSavedIngredient("Salt")
+        assertEquals(listOf("Olive oil", "Salt", "Yeast"), repository.savedIngredients.first())
+    }
+
+    @Test
+    fun deletingASavedIngredientLeavesRecipesUnchanged() = runBlocking {
+        repository.updateSavedRecipe(fridayNight.id, withHoney, namesToSave = setOf("Honey"))
+        repository.loadRecipe(fridayNight.copy(recipe = withHoney))
+        val before = repository.data.first()
+        repository.deleteSavedIngredient("Honey")
+        val after = repository.data.first()
+        assertEquals(before.savedRecipes, after.savedRecipes)
+        assertEquals(before.currentRecipe, after.currentRecipe)
+    }
+
+    @Test
+    fun savedIngredientsAreSortedIgnoringCase() = runBlocking {
+        repository.restoreSavedIngredient("honey")
+        repository.restoreSavedIngredient("Basil")
+        assertEquals(
+            listOf("Basil", "honey", "Olive oil", "Salt", "Yeast"),
+            repository.savedIngredients.first()
+        )
     }
 
     @Test
@@ -131,7 +191,14 @@ class DoughRepositoryTest {
             name = "Party",
             recipe = DefaultDoughRecipe.copy(portionCount = 10, portionWeightGrams = 300)
         )
-        val wetter = DefaultDoughRecipe.copy(hydrationPercent = 65f)
+        val wetter = DefaultDoughRecipe.copy(
+            hydration = Percentage(hundredths = 6500, decimals = 0)
+        )
+        val withHoney = DefaultDoughRecipe.copy(
+            ingredients = listOf(
+                Ingredient(name = "Honey", percentage = Percentage(hundredths = 250, decimals = 1))
+            )
+        )
         val storedData = DoughData(savedRecipes = listOf(fridayNight, party))
     }
 }

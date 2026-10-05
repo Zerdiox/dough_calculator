@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -13,6 +14,7 @@ import com.example.pizza.dough.DoughCalculatorContent
 import com.example.pizza.dough.DoughRecipe
 import com.example.pizza.dough.DoughViewModel
 import com.example.pizza.dough.FullRecipeScreen
+import com.example.pizza.dough.SavedIngredientsScreen
 import com.example.pizza.dough.SavedRecipesScreen
 import kotlinx.serialization.Serializable
 
@@ -23,6 +25,9 @@ private data object CalculatorKey : NavKey
 private data object SavedRecipesKey : NavKey
 
 @Serializable
+private data object SavedIngredientsKey : NavKey
+
+@Serializable
 private data class FullRecipeKey(val title: String, val recipe: DoughRecipe) : NavKey
 
 /** The app's screens and the navigation between them. */
@@ -31,34 +36,20 @@ fun PizzaApp(
     modifier: Modifier = Modifier,
     viewModel: DoughViewModel = viewModel(factory = DoughViewModel.Factory)
 ) {
-    val recipe by viewModel.recipe.collectAsStateWithLifecycle()
     val savedRecipes by viewModel.savedRecipes.collectAsStateWithLifecycle()
-    val loadedRecipe by viewModel.loadedRecipe.collectAsStateWithLifecycle()
-    val resetMessagePending by viewModel.resetMessagePending.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(CalculatorKey)
     NavDisplay(
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
         modifier = modifier,
         entryProvider = entryProvider {
-            entry<CalculatorKey> {
-                val currentRecipe = recipe ?: return@entry
-                DoughCalculatorContent(
-                    recipe = currentRecipe,
-                    loadedRecipeName = loadedRecipe?.name,
-                    resetMessagePending = resetMessagePending,
-                    onRecipeChange = viewModel::updateRecipe,
-                    onSaveRecipe = { name -> viewModel.saveRecipe(name, currentRecipe) },
-                    onUpdateLoadedRecipe = {
-                        loadedRecipe?.let { viewModel.updateSavedRecipe(it.id, currentRecipe) }
-                    },
-                    onOpenSavedRecipes = { backStack.add(SavedRecipesKey) },
-                    onOpenFullRecipe = {
-                        backStack.add(FullRecipeKey(title = "Full recipe", recipe = currentRecipe))
-                    },
-                    onDismissResetMessage = viewModel::dismissResetMessage
-                )
-            }
+            calculatorEntry(
+                viewModel = viewModel,
+                onOpenSavedRecipes = { backStack.add(SavedRecipesKey) },
+                onOpenFullRecipe = {
+                    backStack.add(FullRecipeKey(title = "Full recipe", recipe = it))
+                }
+            )
             entry<SavedRecipesKey> {
                 val recipes = savedRecipes ?: return@entry
                 SavedRecipesScreen(
@@ -72,9 +63,11 @@ fun PizzaApp(
                     },
                     onDeleteRecipe = { viewModel.deleteRecipe(it.id) },
                     onRestoreRecipe = viewModel::restoreRecipe,
+                    onOpenSavedIngredients = { backStack.add(SavedIngredientsKey) },
                     onBack = { backStack.removeLastOrNull() }
                 )
             }
+            savedIngredientsEntry(viewModel = viewModel, onBack = { backStack.removeLastOrNull() })
             entry<FullRecipeKey> { key ->
                 FullRecipeScreen(
                     title = key.title,
@@ -84,4 +77,56 @@ fun PizzaApp(
             }
         }
     )
+}
+
+/** The calculator, collecting its state only while it is shown. */
+private fun EntryProviderScope<NavKey>.calculatorEntry(
+    viewModel: DoughViewModel,
+    onOpenSavedRecipes: () -> Unit,
+    onOpenFullRecipe: (DoughRecipe) -> Unit
+) {
+    entry<CalculatorKey> {
+        val recipe by viewModel.recipe.collectAsStateWithLifecycle()
+        val loadedRecipe by viewModel.loadedRecipe.collectAsStateWithLifecycle()
+        val ingredientEditor by viewModel.ingredientEditing.editor.collectAsStateWithLifecycle()
+        val savedIngredients by viewModel.savedIngredients.collectAsStateWithLifecycle()
+        val resetMessagePending by viewModel.resetMessagePending.collectAsStateWithLifecycle()
+        val currentRecipe = recipe ?: return@entry
+        DoughCalculatorContent(
+            recipe = currentRecipe,
+            loadedRecipeName = loadedRecipe?.name,
+            ingredientEditor = ingredientEditor,
+            savedIngredients = savedIngredients.orEmpty(),
+            resetMessagePending = resetMessagePending,
+            onRecipeChange = viewModel::updateRecipe,
+            onStartEditing = { viewModel.ingredientEditing.start(currentRecipe.ingredients) },
+            onEditorChange = viewModel.ingredientEditing::change,
+            onFinishEditing = { viewModel.ingredientEditing.finish(currentRecipe) },
+            onSaveRecipe = { name, namesToSave ->
+                viewModel.saveRecipe(name, currentRecipe, namesToSave)
+            },
+            onUpdateLoadedRecipe = { namesToSave ->
+                loadedRecipe?.let { viewModel.updateSavedRecipe(it.id, currentRecipe, namesToSave) }
+            },
+            onOpenSavedRecipes = onOpenSavedRecipes,
+            onOpenFullRecipe = { onOpenFullRecipe(currentRecipe) },
+            onDismissResetMessage = viewModel::dismissResetMessage
+        )
+    }
+}
+
+/** The saved ingredients, collecting them only while they are shown. */
+private fun EntryProviderScope<NavKey>.savedIngredientsEntry(
+    viewModel: DoughViewModel,
+    onBack: () -> Unit
+) {
+    entry<SavedIngredientsKey> {
+        val savedIngredients by viewModel.savedIngredients.collectAsStateWithLifecycle()
+        SavedIngredientsScreen(
+            savedIngredients = savedIngredients ?: return@entry,
+            onDeleteIngredient = viewModel::deleteSavedIngredient,
+            onRestoreIngredient = viewModel::restoreSavedIngredient,
+            onBack = onBack
+        )
+    }
 }

@@ -1,11 +1,6 @@
-# ingredient-weights Specification
+# Spec Delta
 
-## Purpose
-
-Defines the ingredients a dough is made of, how their weights follow from baker's percentages, and
-how those weights are shown wherever the app shows a recipe.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Ingredient list
 A recipe SHALL be made of flour, water and any number of other ingredients, each expressed as a
@@ -27,13 +22,6 @@ A new recipe SHALL have water at 62% and no other ingredients.
 #### Scenario: Percentage stays on a step within its range
 - **WHEN** the user tries to set an ingredient or water above 100%
 - **THEN** the percentage is not accepted and the previous value stays
-
-### Requirement: Total dough weight
-The total dough weight SHALL be the number of portions multiplied by the portion weight.
-
-#### Scenario: Four portions of 250 g
-- **WHEN** a recipe has 4 portions of 250 g
-- **THEN** the total dough weight is 1000 g
 
 ### Requirement: Weights from baker's percentages
 The flour weight SHALL be the total dough weight divided by one plus the sum of the percentages of
@@ -72,22 +60,7 @@ weights SHALL update as soon as any input changes.
 - **WHEN** an ingredient is at 0%
 - **THEN** the table has no row for it
 
-### Requirement: Rounding in the weights table
-Weights under 10 g SHALL be shown with at most one decimal; weights of 10 g or more SHALL be shown in
-whole grams. Percentages SHALL be shown with at most two decimals. Trailing zeros SHALL be dropped,
-and rounding SHALL be half up.
-
-#### Scenario: Small weight keeps one decimal
-- **WHEN** yeast weighs 1.19 g
-- **THEN** the table shows "1.2 g"
-
-#### Scenario: Large weight in whole grams
-- **WHEN** flour weighs 594.5 g
-- **THEN** the table shows "595 g"
-
-#### Scenario: Percentage without trailing zeros
-- **WHEN** water is 62% and yeast is 0.25%
-- **THEN** the table shows "62%" and "0.25%"
+## ADDED Requirements
 
 ### Requirement: Percentage precision
 Every percentage, water's included, SHALL have a precision of whole numbers, one decimal or two

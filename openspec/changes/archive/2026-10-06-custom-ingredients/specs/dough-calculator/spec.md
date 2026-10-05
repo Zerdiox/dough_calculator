@@ -1,11 +1,6 @@
-# dough-calculator Specification
+# Spec Delta
 
-## Purpose
-
-Lets the user work out a batch of dough by choosing how many portions to make, how heavy each
-portion is and the ingredient percentages, and save the result as a recipe.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Calculator screen
 The app SHALL open on the dough calculator. It SHALL show the portions, the portion weight, a
@@ -15,19 +10,6 @@ the ingredients, the weights table for the current values, and a "Start kneading
 #### Scenario: App opens on the calculator
 - **WHEN** the user opens the app
 - **THEN** the dough calculator is shown with the weights table for its current values
-
-### Requirement: Portions
-The user SHALL set the number of portions with − and + buttons, one portion at a time, between 1 and
-50. The − button SHALL be disabled at 1 and the + button SHALL be disabled at 50. The screen SHALL
-call them "Portions".
-
-#### Scenario: Cannot go below one portion
-- **WHEN** the calculator is at 1 portion
-- **THEN** the − button is disabled
-
-#### Scenario: Cannot go above fifty portions
-- **WHEN** the calculator is at 50 portions
-- **THEN** the + button is disabled
 
 ### Requirement: Portion weight
 The user SHALL set the portion weight by typing it in whole grams into a field, or with − and +
@@ -108,68 +90,7 @@ them again the next time it opens.
   app
 - **THEN** the calculator shows 6 portions, 68% water and Honey at 2.5% with a step of 0.1
 
-### Requirement: Save as a new recipe
-The user SHALL be able to save the calculator's current values as a new recipe. Saving SHALL ask for
-a name; the Save button SHALL stay disabled while the name is blank, and leading and trailing spaces
-SHALL be removed. A name already used by another recipe SHALL be allowed. After saving, the app
-SHALL confirm with a short message naming the recipe. Cancelling SHALL save nothing.
-
-#### Scenario: Save a recipe
-- **WHEN** the user saves the calculator with the name "Friday night"
-- **THEN** a recipe named "Friday night" with the calculator's values appears in the saved recipes
-- **AND** a message confirms "Saved "Friday night""
-
-#### Scenario: Blank name cannot be saved
-- **WHEN** the name field is empty or only spaces
-- **THEN** the Save button is disabled
-
-#### Scenario: Duplicate name is allowed
-- **WHEN** a recipe named "Friday night" exists and the user saves another with the same name
-- **THEN** both recipes are in the saved recipes
-
-### Requirement: Update a loaded recipe
-When the calculator's values were loaded from a saved recipe that still exists, saving SHALL offer
-two choices: update that recipe with the calculator's current values, keeping its name, or save a
-new recipe under a new name. Cancelling the choice SHALL save nothing. After updating, the app SHALL
-confirm with a short message naming the recipe. The calculator SHALL keep remembering the recipe it
-was loaded from after the app is closed and opened again. After saving as new, the calculator SHALL
-count as loaded from the new recipe. When the loaded recipe has since been deleted, saving SHALL
-behave as saving a new recipe.
-
-#### Scenario: Update the loaded recipe
-- **WHEN** the user loads "Friday night" into the calculator, changes water to 65% and chooses to
-  update it
-- **THEN** "Friday night" now has 65% water
-- **AND** no new recipe is added
-- **AND** a message confirms "Updated "Friday night""
-
-#### Scenario: Save the loaded recipe as new
-- **WHEN** the user loads "Friday night", changes water to 65% and chooses to save as new with the
-  name "Wetter Friday"
-- **THEN** "Wetter Friday" is added with 65% water
-- **AND** "Friday night" is unchanged
-
-#### Scenario: Loaded recipe was deleted
-- **WHEN** the recipe the calculator was loaded from has been deleted and the user saves
-- **THEN** only saving as a new recipe is offered
-
-#### Scenario: Loaded recipe remembered after a restart
-- **WHEN** the user loads "Friday night", closes the app, opens it again and saves
-- **THEN** updating "Friday night" is offered
-
-#### Scenario: Update after saving as new
-- **WHEN** the user loads "Friday night", saves as new with the name "Wetter Friday", changes salt to
-  2.5% and saves again
-- **THEN** updating "Wetter Friday" is offered
-
-### Requirement: Start kneading
-The "Start kneading" button SHALL open the full recipe for the calculator's current values, titled
-"Full recipe".
-
-#### Scenario: Start kneading from the calculator
-- **WHEN** the calculator shows 6 portions of 280 g and the user taps "Start kneading"
-- **THEN** the full recipe opens titled "Full recipe" with 6 portions of 280 g and the calculator's
-  percentages
+## ADDED Requirements
 
 ### Requirement: Edit the ingredients
 The Ingredients card SHALL have an Edit button. While editing:

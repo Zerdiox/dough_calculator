@@ -7,47 +7,65 @@ class DoughRecipeTest {
     private val recipe = DoughRecipe(
         portionCount = 4,
         portionWeightGrams = 250,
-        hydrationPercent = 65f,
-        saltPercent = 3f,
-        yeastPercent = 0.2f,
-        oilPercent = 0f
+        hydration = Percentage(hundredths = 6500, decimals = 0),
+        ingredients = listOf(
+            Ingredient(name = "Salt", percentage = Percentage(hundredths = 300, decimals = 1)),
+            Ingredient(name = "Yeast", percentage = Percentage(hundredths = 20, decimals = 2))
+        )
     )
 
     @Test
     fun ingredientsAddUpToTotalDoughWeight() {
         val amounts = recipe.amounts()
-        val sum = amounts.flour + amounts.water + amounts.salt + amounts.yeast + amounts.oil
-        assertEquals(1000f, sum, 0.01f)
+        val sum = amounts.flour + amounts.water + amounts.ingredients.sum()
+        assertEquals(1000.0, sum, 0.01)
     }
 
     @Test
     fun flourIsTotalDividedBySumOfPercentages() {
-        assertEquals(1000f / 1.682f, recipe.amounts().flour, 0.01f)
+        assertEquals(1000 / 1.682, recipe.amounts().flour, 0.01)
     }
 
     @Test
     fun ingredientsAreRelativeToFlour() {
         val amounts = recipe.amounts()
-        assertEquals(amounts.flour * 0.65f, amounts.water, 0.01f)
-        assertEquals(amounts.flour * 0.03f, amounts.salt, 0.01f)
-        assertEquals(amounts.flour * 0.002f, amounts.yeast, 0.001f)
+        assertEquals(amounts.flour * 0.65, amounts.water, 0.01)
+        assertEquals(amounts.flour * 0.03, amounts.ingredients[0], 0.01)
+        assertEquals(amounts.flour * 0.002, amounts.ingredients[1], 0.001)
     }
 
     @Test
     fun zeroPercentLeavesIngredientOut() {
-        assertEquals(0f, recipe.amounts().oil, 0f)
+        val withoutWater = recipe.copy(hydration = Percentage(hundredths = 0, decimals = 0))
+        assertEquals(0.0, withoutWater.amounts().water, 0.0)
     }
 
     @Test
     fun zeroPortionsNeedNoDough() {
         val amounts = recipe.copy(portionCount = 0).amounts()
-        assertEquals(0f, amounts.flour, 0f)
-        assertEquals(0f, amounts.water, 0f)
+        assertEquals(0.0, amounts.flour, 0.0)
+        assertEquals(0.0, amounts.water, 0.0)
     }
 
     @Test
     fun morePortionsScaleEveryIngredient() {
+        val amounts = recipe.amounts()
         val doubled = recipe.copy(portionCount = 8).amounts()
-        assertEquals(recipe.amounts().flour * 2, doubled.flour, 0.01f)
+        assertEquals(amounts.flour * 2, doubled.flour, 0.01)
+        assertEquals(amounts.water * 2, doubled.water, 0.01)
+        amounts.ingredients.zip(doubled.ingredients).forEach { (single, double) ->
+            assertEquals(single * 2, double, 0.001)
+        }
+    }
+
+    @Test
+    fun defaultRecipeIsFourPortionsOfWaterOnly() {
+        val expected = DoughRecipe(
+            portionCount = 4,
+            portionWeightGrams = 250,
+            hydration = Percentage(hundredths = 6200, decimals = 0),
+            ingredients = emptyList()
+        )
+        assertEquals(expected, DefaultDoughRecipe)
     }
 }
