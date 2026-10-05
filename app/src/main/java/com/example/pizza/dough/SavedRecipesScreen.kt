@@ -17,6 +17,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -24,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pizza.R
 import com.example.pizza.ui.theme.PizzaTheme
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,10 +47,14 @@ fun SavedRecipesScreen(
     onOpenRecipe: (SavedRecipe) -> Unit,
     onEditRecipe: (SavedRecipe) -> Unit,
     onDeleteRecipe: (SavedRecipe) -> Unit,
+    onRestoreRecipe: (SavedRecipe, Int) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var recipeToDelete by remember { mutableStateOf<SavedRecipe?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    // Tied to this screen, so leaving it ends the message and the chance to undo.
+    val scope = rememberCoroutineScope()
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -52,7 +62,8 @@ fun SavedRecipesScreen(
                 title = { Text("Saved recipes") },
                 navigationIcon = { BackButton(onClick = onBack) }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         if (savedRecipes.isEmpty()) {
             EmptySavedRecipes(modifier = Modifier.padding(innerPadding))
@@ -77,8 +88,22 @@ fun SavedRecipesScreen(
             DeleteRecipeDialog(
                 recipeName = savedRecipe.name,
                 onConfirm = {
+                    val index = savedRecipes.indexOfFirst { it.id == savedRecipe.id }
                     onDeleteRecipe(savedRecipe)
                     recipeToDelete = null
+                    // Messages queue up, so the previous one has to go before this one can show.
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = "Deleted \"${savedRecipe.name}\"",
+                            actionLabel = "Undo",
+                            // With an action, the message would otherwise stay until dismissed.
+                            duration = SnackbarDuration.Long
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            onRestoreRecipe(savedRecipe, index)
+                        }
+                    }
                 },
                 onDismiss = { recipeToDelete = null }
             )
@@ -167,6 +192,7 @@ private fun SavedRecipesScreenPreview() {
             onOpenRecipe = {},
             onEditRecipe = {},
             onDeleteRecipe = {},
+            onRestoreRecipe = { _, _ -> },
             onBack = {}
         )
     }

@@ -65,6 +65,19 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
         dataStore.updateData { it.copy(resetMessagePending = false) }
     }
 
+    /**
+     * Puts the deleted [savedRecipe] back at [index], or last if the list is shorter. Does nothing
+     * if it is still there, so restoring twice can't make a copy.
+     */
+    suspend fun restoreRecipe(savedRecipe: SavedRecipe, index: Int) {
+        dataStore.updateData { data ->
+            val recipes = data.savedRecipes
+            if (recipes.any { it.id == savedRecipe.id }) return@updateData data
+            val position = index.coerceIn(0, recipes.size)
+            data.copy(savedRecipes = recipes.take(position) + savedRecipe + recipes.drop(position))
+        }
+    }
+
     suspend fun deleteRecipe(id: String) {
         dataStore.updateData { data ->
             data.copy(savedRecipes = data.savedRecipes.filterNot { it.id == id })

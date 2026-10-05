@@ -14,7 +14,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** Loading, saving and updating recipes keep the calculator linked to the right recipe. */
+/**
+ * Loading, saving, updating and restoring recipes keep the calculator linked to the right recipe.
+ */
 class DoughRepositoryTest {
     @get:Rule
     val folder = TemporaryFolder()
@@ -75,6 +77,42 @@ class DoughRepositoryTest {
         assertEquals(party, repository.data.first().loadedRecipe)
         repository.deleteRecipe(party.id)
         assertNull(repository.data.first().loadedRecipe)
+    }
+
+    @Test
+    fun restoringPutsTheRecipeBackInItsPlace() = runBlocking {
+        repository.deleteRecipe(fridayNight.id)
+        repository.restoreRecipe(fridayNight, index = 0)
+        assertEquals(storedData.savedRecipes, repository.data.first().savedRecipes)
+    }
+
+    @Test
+    fun restoringPastTheEndPutsTheRecipeLast() = runBlocking {
+        repository.deleteRecipe(fridayNight.id)
+        repository.restoreRecipe(fridayNight, index = 5)
+        assertEquals(listOf(party, fridayNight), repository.data.first().savedRecipes)
+    }
+
+    @Test
+    fun restoringBeforeTheStartPutsTheRecipeFirst() = runBlocking {
+        repository.deleteRecipe(fridayNight.id)
+        repository.restoreRecipe(fridayNight, index = -1)
+        assertEquals(listOf(fridayNight, party), repository.data.first().savedRecipes)
+    }
+
+    @Test
+    fun restoringARecipeThatIsStillThereChangesNothing() = runBlocking {
+        val before = repository.data.first()
+        repository.restoreRecipe(party, index = 0)
+        assertEquals(before, repository.data.first())
+    }
+
+    @Test
+    fun restoringTheLoadedRecipeLinksItAgain() = runBlocking {
+        repository.loadRecipe(party)
+        repository.deleteRecipe(party.id)
+        repository.restoreRecipe(party, index = 1)
+        assertEquals(party, repository.data.first().loadedRecipe)
     }
 
     @Test

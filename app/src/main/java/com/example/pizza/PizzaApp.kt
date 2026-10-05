@@ -71,6 +71,7 @@ fun PizzaApp(
                         backStack.removeLastOrNull()
                     },
                     onDeleteRecipe = { viewModel.deleteRecipe(it.id) },
+                    onRestoreRecipe = viewModel::restoreRecipe,
                     onBack = { backStack.removeLastOrNull() }
                 )
             }

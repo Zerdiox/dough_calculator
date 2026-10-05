@@ -82,6 +82,10 @@ class DoughViewModel(
         writeScope.launch { repository.deleteRecipe(id) }
     }
 
+    fun restoreRecipe(savedRecipe: SavedRecipe, index: Int) {
+        writeScope.launch { repository.restoreRecipe(savedRecipe, index) }
+    }
+
     /**
      * Replaces the pending calculator write with [write]. The pending one is cancelled and awaited
      * first, so it can never land after the newer one.
