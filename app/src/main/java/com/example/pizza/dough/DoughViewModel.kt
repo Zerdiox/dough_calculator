@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.pizza.PizzaApplication
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,11 @@ class DoughViewModel(private val repository: DoughRepository) : ViewModel() {
         .map { it.savedRecipes }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
+    /** Whether the user still has to be told that unreadable data was set aside. */
+    val resetMessagePending: StateFlow<Boolean> = repository.data
+        .map { it.resetMessagePending }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
+
     fun updateRecipe(recipe: DoughRecipe) {
         editedRecipe.value = recipe
         // Saving waits for a short pause, so dragging a slider doesn't write to disk every frame.
@@ -43,6 +49,10 @@ class DoughViewModel(private val repository: DoughRepository) : ViewModel() {
         viewModelScope.launch { repository.saveRecipe(name, recipe) }
     }
 
+    fun dismissResetMessage() {
+        viewModelScope.launch { repository.dismissResetMessage() }
+    }
+
     fun deleteRecipe(id: String) {
         viewModelScope.launch { repository.deleteRecipe(id) }
     }
@@ -55,6 +65,7 @@ class DoughViewModel(private val repository: DoughRepository) : ViewModel() {
             initializer {
                 val application =
                     checkNotNull(this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
+                        as PizzaApplication
                 DoughViewModel(DoughRepository(application.doughDataStore))
             }
         }

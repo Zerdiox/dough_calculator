@@ -33,6 +33,7 @@ fun PizzaApp(
 ) {
     val recipe by viewModel.recipe.collectAsStateWithLifecycle()
     val savedRecipes by viewModel.savedRecipes.collectAsStateWithLifecycle()
+    val resetMessagePending by viewModel.resetMessagePending.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(CalculatorKey)
     NavDisplay(
         backStack = backStack,
@@ -43,12 +44,14 @@ fun PizzaApp(
                 val currentRecipe = recipe ?: return@entry
                 DoughCalculatorContent(
                     recipe = currentRecipe,
+                    resetMessagePending = resetMessagePending,
                     onRecipeChange = viewModel::updateRecipe,
                     onSaveRecipe = { name -> viewModel.saveRecipe(name, currentRecipe) },
                     onOpenSavedRecipes = { backStack.add(SavedRecipesKey) },
                     onOpenFullRecipe = {
                         backStack.add(FullRecipeKey(title = "Full recipe", recipe = currentRecipe))
-                    }
+                    },
+                    onDismissResetMessage = viewModel::dismissResetMessage
                 )
             }
             entry<SavedRecipesKey> {

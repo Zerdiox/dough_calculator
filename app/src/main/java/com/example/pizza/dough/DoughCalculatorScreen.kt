@@ -43,10 +43,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun DoughCalculatorContent(
     recipe: DoughRecipe,
+    resetMessagePending: Boolean,
     onRecipeChange: (DoughRecipe) -> Unit,
     onSaveRecipe: (name: String) -> Unit,
     onOpenSavedRecipes: () -> Unit,
     onOpenFullRecipe: () -> Unit,
+    onDismissResetMessage: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -93,6 +95,9 @@ fun DoughCalculatorContent(
                 },
                 onDismiss = { showSaveDialog = false }
             )
+        }
+        if (resetMessagePending) {
+            ResetMessageDialog(onConfirm = onDismissResetMessage)
         }
     }
 }
@@ -157,16 +162,37 @@ private fun SaveRecipeDialog(
     )
 }
 
+@Composable
+private fun ResetMessageDialog(onConfirm: () -> Unit, modifier: Modifier = Modifier) {
+    AlertDialog(
+        // Only OK clears the message; closing it any other way would bring it back next launch.
+        onDismissRequest = {},
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("OK") }
+        },
+        title = { Text("Saved recipes couldn't be read") },
+        text = {
+            Text(
+                "The app had to start fresh. A copy of your old data was kept on this phone " +
+                    "so it can be recovered."
+            )
+        },
+        modifier = modifier
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun DoughCalculatorContentPreview() {
     PizzaTheme {
         DoughCalculatorContent(
             recipe = DefaultDoughRecipe,
+            resetMessagePending = false,
             onRecipeChange = {},
             onSaveRecipe = {},
             onOpenSavedRecipes = {},
-            onOpenFullRecipe = {}
+            onOpenFullRecipe = {},
+            onDismissResetMessage = {}
         )
     }
 }
