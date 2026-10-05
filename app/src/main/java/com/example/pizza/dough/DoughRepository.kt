@@ -8,15 +8,20 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.serialization.Serializable
 
 /**
- * Everything the app stores: the recipe on the calculator, the saved recipes, and whether the user
- * still has to be told that unreadable data was set aside.
+ * Everything the app stores: the recipe on the calculator, the saved recipes, the saved recipe the
+ * calculator was loaded from, and whether the user still has to be told that unreadable data was
+ * set aside.
  */
 @Serializable
 data class DoughData(
     val currentRecipe: DoughRecipe = DefaultDoughRecipe,
     val savedRecipes: List<SavedRecipe> = emptyList(),
-    val resetMessagePending: Boolean = false
-)
+    val resetMessagePending: Boolean = false,
+    val loadedRecipeId: String? = null
+) {
+    /** The saved recipe the calculator was loaded from, or `null` once it is deleted. */
+    val loadedRecipe: SavedRecipe? get() = savedRecipes.find { it.id == loadedRecipeId }
+}
 
 @Serializable
 data class SavedRecipe(val id: String, val name: String, val recipe: DoughRecipe)
@@ -33,7 +38,27 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
         // Created outside updateData, whose transform may run more than once.
         val savedRecipe =
             SavedRecipe(id = UUID.randomUUID().toString(), name = name, recipe = recipe)
-        dataStore.updateData { it.copy(savedRecipes = it.savedRecipes + savedRecipe) }
+        dataStore.updateData {
+            it.copy(savedRecipes = it.savedRecipes + savedRecipe, loadedRecipeId = savedRecipe.id)
+        }
+    }
+
+    /** Puts [savedRecipe] on the calculator and links them in one write, so they always agree. */
+    suspend fun loadRecipe(savedRecipe: SavedRecipe) {
+        dataStore.updateData {
+            it.copy(currentRecipe = savedRecipe.recipe, loadedRecipeId = savedRecipe.id)
+        }
+    }
+
+    /** Replaces the values of the saved recipe [id], if it still exists. */
+    suspend fun updateSavedRecipe(id: String, recipe: DoughRecipe) {
+        dataStore.updateData { data ->
+            data.copy(
+                savedRecipes = data.savedRecipes.map {
+                    if (it.id == id) it.copy(recipe = recipe) else it
+                }
+            )
+        }
     }
 
     suspend fun dismissResetMessage() {

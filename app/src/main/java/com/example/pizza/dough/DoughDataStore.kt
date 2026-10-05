@@ -5,19 +5,17 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
-/** Creates the DataStore for [file]. The app must keep only one per file. */
-internal fun createDoughDataStore(
-    file: File,
-    scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-): DataStore<DoughData> = DataStoreFactory.create(
-    serializer = DoughDataSerializer(),
-    corruptionHandler = unreadableDataHandler(file),
-    scope = scope,
-    produceFile = { file }
-)
+/**
+ * Creates the DataStore for [file], doing its work in [scope]. The app must keep only one per file.
+ */
+internal fun createDoughDataStore(file: File, scope: CoroutineScope): DataStore<DoughData> =
+    DataStoreFactory.create(
+        serializer = DoughDataSerializer(),
+        corruptionHandler = unreadableDataHandler(file),
+        scope = scope,
+        produceFile = { file }
+    )
 
 /**
  * Keeps a copy of a data file that can't be read next to it, then starts fresh and flags the reset

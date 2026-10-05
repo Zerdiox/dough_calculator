@@ -43,9 +43,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun DoughCalculatorContent(
     recipe: DoughRecipe,
+    loadedRecipeName: String?,
     resetMessagePending: Boolean,
     onRecipeChange: (DoughRecipe) -> Unit,
     onSaveRecipe: (name: String) -> Unit,
+    onUpdateLoadedRecipe: () -> Unit,
     onOpenSavedRecipes: () -> Unit,
     onOpenFullRecipe: () -> Unit,
     onDismissResetMessage: () -> Unit,
@@ -54,37 +56,43 @@ fun DoughCalculatorContent(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var showSaveChoice by rememberSaveable { mutableStateOf(false) }
     var showSaveDialog by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             CalculatorTopBar(
-                onSaveClick = { showSaveDialog = true },
+                onSaveClick = {
+                    if (loadedRecipeName == null) showSaveDialog = true else showSaveChoice = true
+                },
                 onOpenSavedRecipes = onOpenSavedRecipes,
                 scrollBehavior = scrollBehavior
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            PortionsCard(recipe = recipe, onRecipeChange = onRecipeChange)
-            BakerPercentagesCard(recipe = recipe, onRecipeChange = onRecipeChange)
-            DoughResultCard(recipe = recipe)
-            Button(
-                onClick = onOpenFullRecipe,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Text(text = "Start kneading", style = MaterialTheme.typography.titleMedium)
-            }
+        CalculatorBody(
+            recipe = recipe,
+            onRecipeChange = onRecipeChange,
+            onOpenFullRecipe = onOpenFullRecipe,
+            modifier = Modifier.padding(innerPadding)
+        )
+        if (showSaveChoice && loadedRecipeName != null) {
+            SaveChoiceDialog(
+                loadedRecipeName = loadedRecipeName,
+                onUpdate = {
+                    showSaveChoice = false
+                    onUpdateLoadedRecipe()
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Updated \"$loadedRecipeName\"")
+                    }
+                },
+                onSaveAsNew = {
+                    showSaveChoice = false
+                    showSaveDialog = true
+                },
+                onDismiss = { showSaveChoice = false }
+            )
         }
         if (showSaveDialog) {
             SaveRecipeDialog(
@@ -98,6 +106,34 @@ fun DoughCalculatorContent(
         }
         if (resetMessagePending) {
             ResetMessageDialog(onConfirm = onDismissResetMessage)
+        }
+    }
+}
+
+@Composable
+private fun CalculatorBody(
+    recipe: DoughRecipe,
+    onRecipeChange: (DoughRecipe) -> Unit,
+    onOpenFullRecipe: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        PortionsCard(recipe = recipe, onRecipeChange = onRecipeChange)
+        BakerPercentagesCard(recipe = recipe, onRecipeChange = onRecipeChange)
+        DoughResultCard(recipe = recipe)
+        Button(
+            onClick = onOpenFullRecipe,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+        ) {
+            Text(text = "Start kneading", style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -128,6 +164,31 @@ private fun CalculatorTopBar(
             }
         },
         scrollBehavior = scrollBehavior
+    )
+}
+
+/** Asks whether to update the recipe the calculator was loaded from or to save a new one. */
+@Composable
+private fun SaveChoiceDialog(
+    loadedRecipeName: String,
+    onUpdate: () -> Unit,
+    onSaveAsNew: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+        title = { Text("Save recipe") },
+        text = {
+            Column {
+                TextButton(onClick = onUpdate) { Text("Update \"$loadedRecipeName\"") }
+                TextButton(onClick = onSaveAsNew) { Text("Save as new…") }
+            }
+        },
+        modifier = modifier
     )
 }
 
@@ -187,9 +248,11 @@ private fun DoughCalculatorContentPreview() {
     PizzaTheme {
         DoughCalculatorContent(
             recipe = DefaultDoughRecipe,
+            loadedRecipeName = null,
             resetMessagePending = false,
             onRecipeChange = {},
             onSaveRecipe = {},
+            onUpdateLoadedRecipe = {},
             onOpenSavedRecipes = {},
             onOpenFullRecipe = {},
             onDismissResetMessage = {}

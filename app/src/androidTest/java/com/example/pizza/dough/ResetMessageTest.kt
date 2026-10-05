@@ -21,9 +21,11 @@ class ResetMessageTest {
         composeRule.setContent {
             DoughCalculatorContent(
                 recipe = DefaultDoughRecipe,
+                loadedRecipeName = null,
                 resetMessagePending = resetMessagePending,
                 onRecipeChange = {},
                 onSaveRecipe = {},
+                onUpdateLoadedRecipe = {},
                 onOpenSavedRecipes = {},
                 onOpenFullRecipe = {},
                 onDismissResetMessage = { dismissCount++ }

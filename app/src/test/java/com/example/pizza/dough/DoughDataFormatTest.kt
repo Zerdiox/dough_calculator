@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -57,6 +58,17 @@ class DoughDataFormatTest {
     fun resetMessageIsNotWrittenUntilItIsPending() {
         val json = write(DoughData())
         assertTrue(json, !json.contains("resetMessagePending"))
+    }
+
+    @Test
+    fun loadedRecipeIsNotWrittenWhileNoneIsLoaded() {
+        val json = write(DoughData())
+        assertTrue(json, !json.contains("loadedRecipeId"))
+    }
+
+    @Test
+    fun storedDataLoadsWithNoLoadedRecipe() {
+        assertNull(read(storedJson).loadedRecipeId)
     }
 
     @Test
