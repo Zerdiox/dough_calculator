@@ -14,13 +14,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pizza"
+    namespace = "com.example.doughcalculator"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.pizza"
+        applicationId = "com.example.doughcalculator"
         minSdk = 36
         targetSdk = 37
         versionCode = 1

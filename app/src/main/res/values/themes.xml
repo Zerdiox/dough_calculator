@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Mozzarella white, matching the Compose theme, also for the splash screen. -->
-    <style name="Theme.Pizza" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.DoughCalculator" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/mozzarella</item>
         <item name="android:windowSplashScreenBackground">@color/mozzarella</item>
     </style>
