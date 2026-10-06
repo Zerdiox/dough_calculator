@@ -16,6 +16,8 @@ plugins {
 
 // Formats all Kotlin sources and Gradle scripts with ktlint (rules in .editorconfig).
 spotless {
+    // LF like .gitattributes, so the check doesn't depend on how Git checked a file out.
+    lineEndings = com.diffplug.spotless.LineEnding.UNIX
     val ktlintVersion = libs.versions.ktlint.get()
     // Targets name the source folders directly so Gradle never walks into build/ directories,
     // which other tasks rewrite during the same build.
