@@ -2,6 +2,8 @@ package com.example.doughcalculator.dough
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
@@ -89,3 +92,8 @@ internal fun CompactTextField(
         )
     }
 }
+
+/** Centres an icon on a field's row, so it stays level when a message shows below the field. */
+internal val FieldHeight = Modifier
+    .heightIn(min = ControlRowHeight)
+    .wrapContentHeight(Alignment.CenterVertically)

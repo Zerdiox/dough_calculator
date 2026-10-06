@@ -61,7 +61,7 @@ internal fun PortionsCard(
 }
 
 @Composable
-private fun PortionStepper(
+internal fun PortionStepper(
     count: Int,
     onCountChange: (Int) -> Unit,
     modifier: Modifier = Modifier

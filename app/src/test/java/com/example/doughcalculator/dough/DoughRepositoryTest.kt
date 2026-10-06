@@ -57,6 +57,28 @@ class DoughRepositoryTest {
     }
 
     @Test
+    fun savingWithoutLinkingLeavesTheCalculatorAlone() = runBlocking {
+        repository.loadRecipe(fridayNight)
+        repository.saveRecipe("Book", wetter, setOf("Malt"), linkCalculator = false)
+        val data = repository.data.first()
+        assertEquals("Book", data.savedRecipes.last().name)
+        assertEquals(wetter, data.savedRecipes.last().recipe)
+        assertEquals(fridayNight.id, data.loadedRecipeId)
+        assertEquals(fridayNight.recipe, data.currentRecipe)
+        assertEquals(true, "Malt" in data.savedIngredients)
+    }
+
+    @Test
+    fun usingARecipeStoresItAndDropsTheLinkTogether() = runBlocking {
+        repository.loadRecipe(fridayNight)
+        repository.useRecipe(wetter)
+        // One write: the file on disk holds both, not just the data the repository caches.
+        val stored = DoughDataSerializer().readFrom(dataFile.inputStream())
+        assertEquals(wetter, stored.currentRecipe)
+        assertNull(stored.loadedRecipeId)
+    }
+
+    @Test
     fun updatingReplacesTheValuesInPlace() = runBlocking {
         repository.updateSavedRecipe(fridayNight.id, wetter)
         val expected = listOf(fridayNight.copy(recipe = wetter), party)

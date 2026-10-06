@@ -149,6 +149,35 @@ class DoughViewModelTest {
         assertEquals(saved, data.savedRecipes.last())
     }
 
+    @Test
+    fun startingAConversionGivesAnEmptyDraftWithTheGivenPortions() {
+        viewModel.conversion.start(portionCount = 6)
+        viewModel.conversion.change(viewModel.conversion.draft.value.copy(flour = "500"))
+        viewModel.conversion.start(portionCount = 6)
+        assertEquals(ConversionDraft(portionCount = 6), viewModel.conversion.draft.value)
+    }
+
+    @Test
+    fun usingARecipeReplacesTheCalculatorAndDropsTheLink() = runBlocking {
+        viewModel.loadRecipe(party)
+        viewModel.useRecipe(withSalt)
+        awaitWrites()
+        val data = repository.data.first()
+        assertEquals(withSalt, data.currentRecipe)
+        assertNull(data.loadedRecipeId)
+    }
+
+    @Test
+    fun savingAConvertedRecipeKeepsTheCalculatorLink() = runBlocking {
+        viewModel.loadRecipe(party)
+        viewModel.saveRecipe("Book", withSalt, setOf("Malt"), linkCalculator = false)
+        awaitWrites()
+        val data = repository.data.first()
+        assertEquals("Book", data.savedRecipes.last().name)
+        assertEquals(party.id, data.loadedRecipeId)
+        assertEquals(party.recipe, data.currentRecipe)
+    }
+
     // Waiting on the stored data instead can miss a write that lands while the wait starts.
     private suspend fun awaitWrites() = writeScope.coroutineContext.job.children.toList().joinAll()
 

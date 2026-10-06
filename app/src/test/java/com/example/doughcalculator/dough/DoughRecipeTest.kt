@@ -35,6 +35,17 @@ class DoughRecipeTest {
     }
 
     @Test
+    fun waterAboveOneHundredPercentStillAddsUp() {
+        val wet = recipe.copy(
+            hydration = Percentage(hundredths = 11000, decimals = 0),
+            ingredients = emptyList()
+        )
+        val amounts = wet.amounts()
+        assertEquals(1000 / 2.1, amounts.flour, 0.01)
+        assertEquals(1000.0, amounts.flour + amounts.water, 0.01)
+    }
+
+    @Test
     fun zeroPercentLeavesIngredientOut() {
         val withoutWater = recipe.copy(hydration = Percentage(hundredths = 0, decimals = 0))
         assertEquals(0.0, withoutWater.amounts().water, 0.0)

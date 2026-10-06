@@ -3,19 +3,19 @@ package com.example.doughcalculator.dough
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-/** Percentages from 0 to 100, stepped by the precision the user typed. */
+/** Percentages from 0 to 200, stepped by the precision the user typed. */
 object PercentRules : ValueRules<Percentage> {
     // Plain digits with an optional decimal part; rules out signs and exponents that
     // BigDecimal would otherwise accept.
     private val NUMBER = Regex("""\d+(\.\d*)?|\.\d+""")
-    private val MAX = BigDecimal(100)
-    private val ERROR = Parsed.Error("Enter 0 to 100")
+    private val MAX = BigDecimal(MAX_PERCENT)
+    private val ERROR = Parsed.Error("Enter 0 to $MAX_PERCENT")
 
     override val unit = "%"
 
     override val acceptsDecimals = true
 
-    // Checked against 100 instead, and extra decimals are rounded rather than refused.
+    // Checked against the maximum instead, and extra decimals are rounded rather than refused.
     override val maxLength: Int? = null
 
     override fun parse(text: String): Parsed<Percentage> {
@@ -32,14 +32,14 @@ object PercentRules : ValueRules<Percentage> {
     }
 
     override fun stepUp(value: Percentage): Percentage = value.copy(
-        hundredths = (value.hundredths + value.stepHundredths).coerceAtMost(FULL_PERCENT_HUNDREDTHS)
+        hundredths = (value.hundredths + value.stepHundredths).coerceAtMost(MAX_PERCENT_HUNDREDTHS)
     )
 
     override fun stepDown(value: Percentage): Percentage = value.copy(
         hundredths = (value.hundredths - value.stepHundredths).coerceAtLeast(0)
     )
 
-    override fun canStepUp(value: Percentage): Boolean = value.hundredths < FULL_PERCENT_HUNDREDTHS
+    override fun canStepUp(value: Percentage): Boolean = value.hundredths < MAX_PERCENT_HUNDREDTHS
 
     override fun canStepDown(value: Percentage): Boolean = value.hundredths > 0
 

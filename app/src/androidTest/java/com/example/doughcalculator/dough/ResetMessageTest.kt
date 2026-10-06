@@ -32,6 +32,7 @@ class ResetMessageTest {
                 onSaveRecipe = { _, _ -> },
                 onUpdateLoadedRecipe = {},
                 onOpenSavedRecipes = {},
+                onOpenConvert = {},
                 onOpenFullRecipe = {},
                 onDismissResetMessage = { dismissCount++ }
             )

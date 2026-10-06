@@ -46,14 +46,25 @@ class PercentageTest {
     @Test
     fun rangeEndsAreAccepted() {
         assertEquals(Percentage(hundredths = 0, decimals = 0), accepted("0"))
-        assertEquals(Percentage(hundredths = 10000, decimals = 0), accepted("100"))
+        assertEquals(Percentage(hundredths = 20000, decimals = 0), accepted("200"))
     }
 
     @Test
-    fun anythingButANumberFrom0To100IsAnError() {
-        listOf("", " ", "abc", ".", "120", "-1", "1e2", "100.01").forEach { text ->
-            assertEquals(text, Parsed.Error("Enter 0 to 100"), PercentRules.parse(text))
+    fun aboveOneHundredIsAccepted() {
+        assertEquals(Percentage(hundredths = 15000, decimals = 0), accepted("150"))
+    }
+
+    @Test
+    fun anythingButANumberFrom0To200IsAnError() {
+        listOf("", " ", "abc", ".", "250", "-1", "1e2", "200.01").forEach { text ->
+            assertEquals(text, Parsed.Error("Enter 0 to 200"), PercentRules.parse(text))
         }
+    }
+
+    @Test
+    fun aPercentageUpTo200IsAllowed() {
+        assertEquals(20000, Percentage(20000, 0).hundredths)
+        assertThrows(IllegalArgumentException::class.java) { Percentage(20001, 2) }
     }
 
     @Test
@@ -71,18 +82,20 @@ class PercentageTest {
     }
 
     @Test
-    fun steppingStaysWithin0To100AndKeepsTheDecimals() {
+    fun steppingStaysWithin0To200AndKeepsTheDecimals() {
         assertEquals(Percentage(0, 2), PercentRules.stepDown(Percentage(1, 2)))
         assertEquals(Percentage(0, 2), PercentRules.stepDown(Percentage(0, 2)))
-        assertEquals(Percentage(10000, 1), PercentRules.stepUp(Percentage(10000, 1)))
+        assertEquals(Percentage(10100, 0), PercentRules.stepUp(Percentage(10000, 0)))
+        assertEquals(Percentage(20000, 1), PercentRules.stepUp(Percentage(20000, 1)))
     }
 
     @Test
     fun buttonsAreDisabledAtTheRangeEnds() {
         assertFalse(PercentRules.canStepDown(Percentage(0, 2)))
         assertTrue(PercentRules.canStepUp(Percentage(0, 2)))
-        assertFalse(PercentRules.canStepUp(Percentage(10000, 0)))
-        assertTrue(PercentRules.canStepDown(Percentage(10000, 0)))
+        assertTrue(PercentRules.canStepUp(Percentage(10000, 0)))
+        assertFalse(PercentRules.canStepUp(Percentage(20000, 0)))
+        assertTrue(PercentRules.canStepDown(Percentage(20000, 0)))
     }
 
     @Test

@@ -56,6 +56,12 @@ class DoughViewModel(
      */
     val ingredientEditing = IngredientEditing(onFinish = ::updateRecipe)
 
+    /**
+     * The recipe typed on the Convert screen. Kept here so it survives rotation; it is not stored,
+     * so closing the app drops it.
+     */
+    val conversion = RecipeConverting()
+
     /** Whether the user still has to be told that unreadable data was set aside. */
     val resetMessagePending: StateFlow<Boolean> = repository.data
         .map { it.resetMessagePending }
@@ -76,9 +82,24 @@ class DoughViewModel(
         writeCalculator { withContext(NonCancellable) { repository.loadRecipe(savedRecipe) } }
     }
 
-    /** Saves [recipe] as new, adding [namesToSave] to the saved ingredients. */
-    fun saveRecipe(name: String, recipe: DoughRecipe, namesToSave: Set<String>) {
-        writeScope.launch { repository.saveRecipe(name, recipe, namesToSave) }
+    /** Puts [recipe] on the calculator, which then counts as not loaded from any saved recipe. */
+    fun useRecipe(recipe: DoughRecipe) {
+        editedRecipe.value = recipe
+        // Not cancellable: a change made right after must not leave the old link in place.
+        writeCalculator { withContext(NonCancellable) { repository.useRecipe(recipe) } }
+    }
+
+    /**
+     * Saves [recipe] as new, adding [namesToSave] to the saved ingredients. With [linkCalculator],
+     * the calculator counts as loaded from it; a recipe saved from Convert leaves the link alone.
+     */
+    fun saveRecipe(
+        name: String,
+        recipe: DoughRecipe,
+        namesToSave: Set<String>,
+        linkCalculator: Boolean = true
+    ) {
+        writeScope.launch { repository.saveRecipe(name, recipe, namesToSave, linkCalculator) }
     }
 
     /** Updates the saved recipe [id], adding [namesToSave] to the saved ingredients. */

@@ -75,6 +75,7 @@ class CalculatorEditModeTest {
                 onSaveRecipe = { _, _ -> },
                 onUpdateLoadedRecipe = {},
                 onOpenSavedRecipes = {},
+                onOpenConvert = {},
                 onOpenFullRecipe = {},
                 onDismissResetMessage = {}
             )
@@ -104,6 +105,14 @@ class CalculatorEditModeTest {
         composeRule.onNodeWithContentDescription("Save recipe").assertIsEnabled()
         composeRule.onNodeWithContentDescription("Saved recipes").assertIsEnabled()
         composeRule.onNodeWithText("Start kneading").performScrollTo().assertIsEnabled()
+    }
+
+    @Test
+    fun convertIsDisabledWhileEditing() {
+        startEditing()
+        composeRule.onNodeWithContentDescription("Convert recipe").assertIsNotEnabled()
+        composeRule.onNodeWithText("Done").performScrollTo().performClick()
+        composeRule.onNodeWithContentDescription("Convert recipe").assertIsEnabled()
     }
 
     @Test

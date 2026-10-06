@@ -1,6 +1,7 @@
 package com.example.doughcalculator.dough
 
-private const val MIN_GRAMS = 5
+/** The lightest portion, in grams. */
+internal const val MIN_GRAMS = 5
 private const val STEP_GRAMS = 5
 private const val MAX_GRAMS = 999_999
 private const val MAX_DIGITS = 6

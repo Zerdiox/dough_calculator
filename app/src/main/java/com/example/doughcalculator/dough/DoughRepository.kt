@@ -43,11 +43,16 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
     val savedIngredients: Flow<List<String>> =
         data.map { it.savedIngredients.sortedWith(String.CASE_INSENSITIVE_ORDER) }
 
-    /** Saves [recipe] as new and adds [namesToSave] to the saved ingredients, in one write. */
+    /**
+     * Saves [recipe] as new and adds [namesToSave] to the saved ingredients, in one write. With
+     * [linkCalculator], the calculator counts as loaded from the new recipe; otherwise its link is
+     * left as it was, for a recipe saved from somewhere other than the calculator.
+     */
     suspend fun saveRecipe(
         name: String,
         recipe: DoughRecipe,
-        namesToSave: Set<String> = emptySet()
+        namesToSave: Set<String> = emptySet(),
+        linkCalculator: Boolean = true
     ) {
         // Created outside updateData, whose transform may run more than once.
         val savedRecipe =
@@ -55,7 +60,7 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
         dataStore.updateData {
             it.copy(
                 savedRecipes = it.savedRecipes + savedRecipe,
-                loadedRecipeId = savedRecipe.id,
+                loadedRecipeId = if (linkCalculator) savedRecipe.id else it.loadedRecipeId,
                 savedIngredients = it.savedIngredients.withNames(namesToSave)
             )
         }
@@ -66,6 +71,14 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
         dataStore.updateData {
             it.copy(currentRecipe = savedRecipe.recipe, loadedRecipeId = savedRecipe.id)
         }
+    }
+
+    /**
+     * Puts [recipe] on the calculator and drops its link to any saved recipe in one write, so the
+     * calculator can't offer to update a recipe it no longer shows.
+     */
+    suspend fun useRecipe(recipe: DoughRecipe) {
+        dataStore.updateData { it.copy(currentRecipe = recipe, loadedRecipeId = null) }
     }
 
     /**

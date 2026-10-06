@@ -7,8 +7,14 @@ import kotlinx.serialization.Serializable
 /** The finest precision a percentage can have. */
 internal const val MAX_PERCENT_DECIMALS = 2
 
-/** 100% in hundredths. */
+/** 100% in hundredths: the flour, which every other percentage is relative to. */
 internal const val FULL_PERCENT_HUNDREDTHS = 10_000
+
+/** The highest percentage an ingredient can have. */
+internal const val MAX_PERCENT = 200
+
+/** [MAX_PERCENT] in hundredths. */
+internal const val MAX_PERCENT_HUNDREDTHS = MAX_PERCENT * 100
 
 /**
  * A baker's percentage in whole hundredths, so 2.5% is 250. Whole numbers keep stepping exact
@@ -20,7 +26,7 @@ internal const val FULL_PERCENT_HUNDREDTHS = 10_000
 @Serializable
 data class Percentage(val hundredths: Int, val decimals: Int) {
     init {
-        require(hundredths in 0..FULL_PERCENT_HUNDREDTHS) { "Percentage out of range: $hundredths" }
+        require(hundredths in 0..MAX_PERCENT_HUNDREDTHS) { "Percentage out of range: $hundredths" }
         require(decimals in 0..MAX_PERCENT_DECIMALS) { "Unsupported decimals: $decimals" }
         // Off its step, the field couldn't show the value with its decimals.
         require(hundredths % stepHundredths == 0) { "$hundredths is off the step of $decimals" }

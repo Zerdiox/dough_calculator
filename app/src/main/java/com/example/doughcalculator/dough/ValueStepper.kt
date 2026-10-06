@@ -27,8 +27,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.doughcalculator.R
 
-// Wide enough for the longest values, "999999 g" and "100.00 %", inside the default padding.
-private val FieldWidth = 112.dp
+// Wide enough for the longest values, "999999 g" and "200.00 %", inside the default padding.
+internal val FieldWidth = 112.dp
 
 /**
  * A named value the user can type, or step with − and +, following [rules]. Only accepted values

@@ -11,11 +11,32 @@ data class EditedIngredient(
     val isAdded: Boolean
 ) {
     /** The name as messages and screen readers say it, standing in for a blank one. */
-    val displayName: String get() = name.trim().ifEmpty { "new ingredient" }
+    val displayName: String get() = displayNameOf(name)
 }
 
+/** [name] as messages and screen readers say it, standing in for a blank one. */
+internal fun displayNameOf(name: String): String = name.trim().ifEmpty { "new ingredient" }
+
 /** A removed row and where it was, so Undo can put it back. */
-data class Removal(val row: EditedIngredient, val index: Int)
+data class Removal<T>(val row: T, val index: Int)
+
+/** [rows] with [removal]'s row back where it was, or last if the list has since become shorter. */
+internal fun <T> restore(rows: List<T>, removal: Removal<T>): List<T> =
+    rows.toMutableList().apply { add(removal.index.coerceAtMost(size), removal.row) }
+
+/**
+ * The [savedNames] to offer for a row holding [typed]: those not in [usedNames], containing what
+ * the row holds so far, alphabetically. Case is ignored throughout.
+ */
+internal fun namesToOffer(
+    typed: String,
+    usedNames: List<String>,
+    savedNames: List<String>
+): List<String> = savedNames
+    .filter { saved ->
+        usedNames.none { it.isSameNameAs(saved) } && saved.contains(typed.trim(), ignoreCase = true)
+    }
+    .sortedWith(String.CASE_INSENSITIVE_ORDER)
 
 /**
  * A draft of a recipe's ingredient list: rename, reorder, add and remove rows, then take the
@@ -25,7 +46,7 @@ data class Removal(val row: EditedIngredient, val index: Int)
 data class IngredientListEditor private constructor(
     val rows: List<EditedIngredient>,
     /** The latest removal, which Undo reverts; a newer removal replaces it. */
-    val lastRemoval: Removal?,
+    val lastRemoval: Removal<EditedIngredient>?,
     private val nextKey: Int
 ) {
     constructor(ingredients: List<Ingredient>) : this(
@@ -56,8 +77,7 @@ data class IngredientListEditor private constructor(
 
     fun undoRemove(): IngredientListEditor {
         val removal = lastRemoval ?: return this
-        val rows = rows.toMutableList().apply { add(removal.index.coerceAtMost(size), removal.row) }
-        return copy(rows = rows, lastRemoval = null)
+        return copy(rows = restore(rows, removal), lastRemoval = null)
     }
 
     /** Ends the chance to undo the latest removal, once its message has gone. */
@@ -88,13 +108,7 @@ data class IngredientListEditor private constructor(
      */
     fun offeredNames(key: Int, savedNames: List<String>): List<String> {
         val row = rows.firstOrNull { it.key == key } ?: return emptyList()
-        val usedNames = rows.filter { it.key != key }.map { it.name }
-        return savedNames
-            .filter { saved ->
-                usedNames.none { it.isSameNameAs(saved) } &&
-                    saved.contains(row.name.trim(), ignoreCase = true)
-            }
-            .sortedWith(String.CASE_INSENSITIVE_ORDER)
+        return namesToOffer(row.name, rows.filter { it.key != key }.map { it.name }, savedNames)
     }
 
     private companion object {

@@ -46,6 +46,7 @@ class LoadedRecipeSaveTest {
                 onSaveRecipe = { name, namesToSave -> saves += name to namesToSave },
                 onUpdateLoadedRecipe = { updates += it },
                 onOpenSavedRecipes = {},
+                onOpenConvert = {},
                 onOpenFullRecipe = {},
                 onDismissResetMessage = {}
             )

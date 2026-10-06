@@ -3,7 +3,6 @@ package com.example.doughcalculator.dough
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,16 +10,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -38,11 +34,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.doughcalculator.R
@@ -64,6 +58,7 @@ fun DoughCalculatorContent(
     onSaveRecipe: (name: String, namesToSave: Set<String>) -> Unit,
     onUpdateLoadedRecipe: (namesToSave: Set<String>) -> Unit,
     onOpenSavedRecipes: () -> Unit,
+    onOpenConvert: () -> Unit,
     onOpenFullRecipe: () -> Unit,
     onDismissResetMessage: () -> Unit,
     modifier: Modifier = Modifier
@@ -89,6 +84,7 @@ fun DoughCalculatorContent(
                     saveStep = if (loadedRecipeName == null) SaveStep.Name else SaveStep.Choice
                 },
                 onOpenSavedRecipes = onOpenSavedRecipes,
+                onOpenConvert = onOpenConvert,
                 actionsEnabled = ingredientEditor == null,
                 scrollBehavior = scrollBehavior
             )
@@ -203,6 +199,7 @@ private fun EditModeEffects(
 private fun CalculatorTopBar(
     onSaveClick: () -> Unit,
     onOpenSavedRecipes: () -> Unit,
+    onOpenConvert: () -> Unit,
     actionsEnabled: Boolean,
     scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier
@@ -211,6 +208,12 @@ private fun CalculatorTopBar(
         title = { Text("Dough calculator") },
         modifier = modifier,
         actions = {
+            IconButton(onClick = onOpenConvert, enabled = actionsEnabled) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_swap_horiz),
+                    contentDescription = "Convert recipe"
+                )
+            }
             IconButton(onClick = onSaveClick, enabled = actionsEnabled) {
                 Icon(
                     painter = painterResource(R.drawable.ic_bookmark_add),
@@ -227,12 +230,6 @@ private fun CalculatorTopBar(
         scrollBehavior = scrollBehavior
     )
 }
-
-/** The recipe's ingredient names that are not among [savedIngredients], ignoring case. */
-private fun DoughRecipe.namesNotIn(savedIngredients: List<String>): List<String> =
-    ingredients.map { it.name }.filter { name ->
-        savedIngredients.none { it.isSameNameAs(name) }
-    }
 
 /** Which save dialog shows: none, the choice to update the loaded recipe, or the name. */
 private enum class SaveStep { None, Choice, Name }
@@ -308,79 +305,6 @@ private fun SaveChoiceDialog(
 }
 
 @Composable
-private fun SaveRecipeDialog(
-    newNamesChecklist: @Composable () -> Unit,
-    onSave: (name: String) -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var name by rememberSaveable { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onSave(name.trim())
-            }, enabled = name.isNotBlank()) { Text("Save") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
-        title = { Text("Save recipe") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    placeholder = { Text("e.g. Friday pizza night") },
-                    singleLine = true
-                )
-                newNamesChecklist()
-            }
-        },
-        modifier = modifier
-    )
-}
-
-/**
- * Lets the user pick which of [newNames], ingredient names that aren't saved ingredients yet, to
- * add to the saved ingredients. Shows nothing when there are none.
- */
-@Composable
-private fun NewNamesChecklist(
-    newNames: List<String>,
-    ticked: Set<String>,
-    onTickedChange: (Set<String>) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    if (newNames.isEmpty()) return
-    Column(modifier = modifier.padding(top = 16.dp)) {
-        Text(text = "Add to saved ingredients", style = MaterialTheme.typography.titleSmall)
-        newNames.forEach { name ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .toggleable(
-                        value = name in ticked,
-                        role = Role.Checkbox,
-                        onValueChange = { tick ->
-                            onTickedChange(if (tick) ticked + name else ticked - name)
-                        }
-                    ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // The row handles the tap, so the whole line is the touch target.
-                Checkbox(checked = name in ticked, onCheckedChange = null)
-                Text(
-                    text = name,
-                    modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun ResetMessageDialog(onConfirm: () -> Unit, modifier: Modifier = Modifier) {
     AlertDialog(
         // Only OK clears the message; closing it any other way would bring it back next launch.
@@ -416,6 +340,7 @@ private fun DoughCalculatorContentPreview() {
             onSaveRecipe = { _, _ -> },
             onUpdateLoadedRecipe = {},
             onOpenSavedRecipes = {},
+            onOpenConvert = {},
             onOpenFullRecipe = {},
             onDismissResetMessage = {}
         )

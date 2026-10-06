@@ -80,6 +80,16 @@ class DoughDataFormatTest {
     }
 
     @Test
+    fun percentagesUpToTheMaximumReadBackTheSame() {
+        val recipe = DefaultDoughRecipe.copy(
+            hydration = Percentage(hundredths = 10000, decimals = 0),
+            ingredients = listOf(Ingredient("Malt", Percentage(hundredths = 20000, decimals = 0)))
+        )
+        val data = DoughData(currentRecipe = recipe)
+        assertEquals(data, read(write(data)))
+    }
+
+    @Test
     fun newerVersionIsUnreadable() {
         assertUnreadable(storedJson.withVersion(3))
     }
