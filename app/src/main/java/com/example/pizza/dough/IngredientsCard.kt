@@ -18,8 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -135,7 +133,7 @@ private fun EditRows(
     val currentEditor by rememberUpdatedState(editor)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
-            modifier = Modifier.heightIn(min = OutlinedTextFieldDefaults.MinHeight),
+            modifier = Modifier.heightIn(min = ControlRowHeight),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -232,14 +230,14 @@ private fun EditRow(
                 error = nameError,
                 offeredNames = offeredNames,
                 onNameChange = onNameChange,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).padding(vertical = CompactFieldInset)
             )
         } else {
             NameField(
                 name = row.name,
                 error = nameError,
                 onNameChange = onNameChange,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).padding(vertical = CompactFieldInset)
             )
         }
         IconButton(onClick = onRemove, modifier = FieldHeight) {
@@ -316,7 +314,7 @@ private fun NameField(
     val focusManager = LocalFocusManager.current
     // A blank name is refused without a message; it's plainly unfinished.
     val message = error?.takeIf { it.isNotEmpty() }
-    OutlinedTextField(
+    CompactTextField(
         value = name,
         onValueChange = { if (it.length <= MAX_NAME_LENGTH) onNameChange(it) },
         modifier = modifier.fillMaxWidth(),
@@ -332,7 +330,7 @@ private fun NameField(
     )
 }
 
-/** Centres an icon on a text field's height, so it stays level when a message shows below. */
+/** Centres an icon on the name field, so it stays level when a message shows below. */
 private val FieldHeight = Modifier
-    .heightIn(min = OutlinedTextFieldDefaults.MinHeight)
+    .heightIn(min = ControlRowHeight)
     .wrapContentHeight(Alignment.CenterVertically)

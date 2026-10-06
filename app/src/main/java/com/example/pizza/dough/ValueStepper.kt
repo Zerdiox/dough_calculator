@@ -9,8 +9,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,13 +54,13 @@ internal fun <T> ValueStepper(
     }
 
     Row(modifier = modifier, verticalAlignment = Alignment.Top) {
-        // Centred on the field's height rather than the whole row, which grows with the hint.
+        // Centred on the buttons and field rather than the whole row, which grows with the hint.
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = OutlinedTextFieldDefaults.MinHeight)
+                .heightIn(min = ControlRowHeight)
                 .wrapContentHeight(Alignment.CenterVertically)
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -131,7 +129,7 @@ private fun ValueField(
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
-    OutlinedTextField(
+    CompactTextField(
         value = text,
         onValueChange = onTextChange,
         // The row's name is a separate text, so the field carries it for screen readers.
