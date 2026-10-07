@@ -26,6 +26,9 @@ flour = total dough / (1 + (water + every other ingredient) / 100)
   recipe's percentages. Water is always there; every other ingredient is one
   you add, name and order yourself. Percentages are typed in, as precisely as
   the recipe needs, and the weights update as you type.
+- **Convert** for recipes written in grams, as books and websites give them.
+  Type in the weights and the portions, and the app works out the baker's
+  percentages, ready to use in the calculator or keep as a saved recipe.
 - **Saved recipes**, each under a name you choose, to follow, load back into
   the calculator to change, or delete.
 - **Saved ingredients**, a short list of names to pick from when adding an
@@ -80,7 +83,7 @@ base64-encoded), `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`.
 ## Stack
 
 Kotlin and Jetpack Compose with Material 3, `ViewModel` for state, DataStore
-plus kotlinx.serialization for storage, and Navigation 3 for the four screens.
+plus kotlinx.serialization for storage, and Navigation 3 for the five screens.
 Detekt and Android Lint run as part of `check`, with lint warnings treated as
 errors.
 
