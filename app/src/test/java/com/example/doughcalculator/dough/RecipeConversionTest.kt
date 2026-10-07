@@ -240,4 +240,53 @@ class RecipeConversionTest {
         val offered = rows.offeredNames(rows.items.last().key, listOf("Yeast", "Olive oil", "Salt"))
         assertEquals(listOf("Olive oil"), offered)
     }
+
+    private val flourAndWater = empty.copy(flour = "500", water = "325")
+
+    private fun percent(whole: Int) = Percentage(hundredths = whole * 100, decimals = 0)
+
+    @Test
+    fun previewKeepsShowingWithANewBlankRow() {
+        val preview = flourAndWater.copy(rows = flourAndWater.rows.add()).preview()
+        assertEquals(206, preview?.portionWeightGrams)
+        assertEquals(percent(65), preview?.hydration)
+        assertEquals(emptyList<Ingredient>(), preview?.ingredients)
+    }
+
+    @Test
+    fun previewLeavesOutARowWithABlankName() {
+        val preview = flourAndWater.withRow("", "15").preview()
+        assertEquals(206, preview?.portionWeightGrams)
+        assertEquals(emptyList<Ingredient>(), preview?.ingredients)
+    }
+
+    @Test
+    fun previewLeavesOutARowWithAMessage() {
+        val preview = empty.copy(flour = "100", water = "60").withRow("Salt", "250").preview()
+        assertEquals(40, preview?.portionWeightGrams)
+        assertEquals(percent(60), preview?.hydration)
+        assertEquals(emptyList<Ingredient>(), preview?.ingredients)
+    }
+
+    @Test
+    fun previewCountsUnusableWaterAsZero() {
+        assertEquals(percent(0), empty.copy(flour = "500", water = "abc").preview()?.hydration)
+    }
+
+    @Test
+    fun previewShowsPortionsUnderFiveGrams() {
+        assertEquals(4, empty.copy(flour = "15", water = "3").preview()?.portionWeightGrams)
+    }
+
+    @Test
+    fun previewNeedsUsableFlour() {
+        listOf("", "0", "abc").forEach { flour ->
+            assertNull(flour, flourAndWater.copy(flour = flour).preview())
+        }
+    }
+
+    @Test
+    fun previewOfACompleteRecipeIsTheRecipe() {
+        assertEquals(bookRecipe.toRecipe(), bookRecipe.preview())
+    }
 }

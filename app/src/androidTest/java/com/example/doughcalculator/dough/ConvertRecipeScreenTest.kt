@@ -85,10 +85,19 @@ class ConvertRecipeScreenTest {
     }
 
     @Test
-    fun blankNameHidesTheTableAndDisablesTheButtons() {
+    fun blankNameKeepsTheTableAndDisablesTheButtons() {
         typeGrams("Flour", "500")
+        typeGrams("Water", "325")
         composeRule.onNodeWithText("Add ingredient").performClick()
-        composeRule.onNodeWithText("TOTAL DOUGH").assertDoesNotExist()
+        composeRule.onNodeWithText("4 × 206 g").assertExists()
+        composeRule.onNodeWithText("Save as recipe").assertIsNotEnabled()
+        composeRule.onNodeWithText("Use in calculator").assertIsNotEnabled()
+    }
+
+    @Test
+    fun blankFlourAsksForTheFlourWeight() {
+        typeGrams("Water", "325")
+        composeRule.onNodeWithText("Enter the flour weight to see the recipe").assertExists()
         composeRule.onNodeWithText("Save as recipe").assertIsNotEnabled()
         composeRule.onNodeWithText("Use in calculator").assertIsNotEnabled()
     }

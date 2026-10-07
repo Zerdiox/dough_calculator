@@ -41,33 +41,39 @@ data class ConversionDraft(
         rows.items.firstOrNull { it.key == key }?.let { percentageOf(it.grams).errorMessage }
 
     /** The recipe in baker's percentages, or null while anything blocks the conversion. */
-    fun toRecipe(): DoughRecipe? {
-        val portionWeight = portionWeight?.takeIf { it >= MIN_GRAMS }
-        // Blank water counts as none.
-        val hydration = percentageOf(water) ?: Parsed.Value(ZERO_PERCENT)
-        val ingredients = ingredients()
-        if (portionWeight == null || hydration !is Parsed.Value || ingredients == null) return null
+    fun toRecipe(): DoughRecipe? = preview()?.takeIf { isComplete }
+
+    /**
+     * The recipe made from what can be used so far, or null while the flour weight can't be used.
+     * Rows whose name or weight can't be used are left out, as are rows without a weight; one that
+     * rounds to 0% is kept. Water that can't be used counts as none. The portion weight has no
+     * minimum.
+     */
+    fun preview(): DoughRecipe? {
+        val flourWeight = usableFlourWeight ?: return null
+        val hydration = usablePercentage(water)
+        val ingredients = rows.items
+            .filter { rows.nameError(it.key) == null && gramsOf(it.grams) > BigDecimal.ZERO }
+            .mapNotNull { row -> usablePercentage(row.grams)?.let { row to it } }
+        val usedWeights = listOfNotNull(water.takeIf { hydration != null }) +
+            ingredients.map { (row, _) -> row.grams }
+        val total = usedWeights.fold(flourWeight) { sum, text -> sum + gramsOf(text) }
         return DoughRecipe(
             portionCount = portionCount,
-            portionWeightGrams = portionWeight,
-            hydration = hydration.value,
-            ingredients = ingredients
+            portionWeightGrams = total.divide(BigDecimal(portionCount), 0, RoundingMode.FLOOR)
+                .toInt(),
+            hydration = hydration ?: ZERO_PERCENT,
+            ingredients = ingredients.map { (row, percentage) ->
+                Ingredient(row.name.trim(), percentage)
+            }
         )
     }
 
-    /**
-     * The other ingredients as percentages, or null while a name or weight can't be used. Rows
-     * without a weight are left out; one that rounds to 0% is kept.
-     */
-    private fun ingredients(): List<Ingredient>? {
-        if (!rows.namesAreValid) return null
-        val ingredients = rows.items.filter { gramsOf(it.grams) > BigDecimal.ZERO }.map { row ->
-            (percentageOf(row.grams) as? Parsed.Value)?.let {
-                Ingredient(row.name.trim(), it.value)
-            }
-        }
-        return ingredients.takeIf { null !in it }?.filterNotNull()
-    }
+    /** Whether every name and weight can be used and the portions are big enough. */
+    private val isComplete: Boolean
+        get() = rows.namesAreValid &&
+            portionWeight?.let { it >= MIN_GRAMS } == true &&
+            (listOf(water) + rows.items.map { it.grams }).none { percentageOf(it) is Parsed.Error }
 
     /** The flour weight, or why it can't be used; null while blank. */
     private val flourWeight: Parsed<BigDecimal>?
@@ -94,6 +100,10 @@ data class ConversionDraft(
             is Parsed.Error -> grams
             is Parsed.Value -> usableFlourWeight?.let { percentage(grams.value, it) }
         }
+
+    /** The share of the flour that [text] grams make, or null while blank or unusable. */
+    private fun usablePercentage(text: String): Percentage? =
+        (percentageOf(text) as? Parsed.Value)?.value
 }
 
 /** A row for an ingredient besides flour and water, with its weight as typed. */

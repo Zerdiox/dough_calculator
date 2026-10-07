@@ -96,7 +96,8 @@ fun ConvertRecipeScreen(
     ) { innerPadding ->
         ConvertBody(
             draft = draft,
-            recipe = recipe,
+            preview = draft.preview(),
+            canConvert = recipe != null,
             savedIngredients = savedIngredients,
             onDraftChange = onDraftChange,
             onSave = {
@@ -139,7 +140,8 @@ fun ConvertRecipeScreen(
 @Composable
 private fun ConvertBody(
     draft: ConversionDraft,
-    recipe: DoughRecipe?,
+    preview: DoughRecipe?,
+    canConvert: Boolean,
     savedIngredients: List<String>,
     onDraftChange: (ConversionDraft) -> Unit,
     onSave: () -> Unit,
@@ -159,10 +161,10 @@ private fun ConvertBody(
             onDraftChange = onDraftChange
         )
         PortionCountCard(draft = draft, onDraftChange = onDraftChange)
-        recipe?.let { DoughResultCard(recipe = it) }
+        if (preview != null) DoughResultCard(recipe = preview) else FlourNeededCard()
         ConvertActions(
             draft = draft,
-            enabled = recipe != null,
+            enabled = canConvert,
             onDraftChange = onDraftChange,
             onSave = onSave,
             onUseInCalculator = onUseInCalculator

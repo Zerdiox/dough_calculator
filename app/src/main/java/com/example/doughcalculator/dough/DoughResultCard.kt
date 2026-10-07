@@ -44,6 +44,22 @@ internal fun DoughResultCard(recipe: DoughRecipe, modifier: Modifier = Modifier)
     }
 }
 
+/** Stands in the weights table's place while there is no flour weight to work from. */
+@Composable
+internal fun FlourNeededCard(modifier: Modifier = Modifier) {
+    OutlinedCard(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
+        Text(
+            text = "Enter the flour weight to see the recipe",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 32.dp)
+        )
+    }
+}
+
 @Composable
 private fun TotalBar(recipe: DoughRecipe, modifier: Modifier = Modifier) {
     val totalGrams by animateIntAsState(targetValue = recipe.totalDoughGrams, label = "totalDough")
