@@ -33,10 +33,10 @@ A name SHALL join the saved ingredients only when the user chooses it while savi
 the recipe being saved has ingredients whose names are not saved ingredients, ignoring upper and
 lower case, the save dialogs SHALL list those names under "Add to saved ingredients", each with a
 checkbox that starts unticked. This list SHALL be shown in the dialog that asks for a new recipe's
-name and in the dialog that offers to update the loaded recipe or save it as new; ticks made in the
-latter SHALL carry over when the user chooses to save as new. When saving completes, the ticked
-names SHALL be added. Cancelling SHALL add nothing. When every ingredient's name is already saved,
-the list SHALL NOT be shown.
+name, whether saving from the calculator or from the Convert screen, and in the dialog that offers
+to update the loaded recipe or save it as new; ticks made in the latter SHALL carry over when the
+user chooses to save as new. When saving completes, the ticked names SHALL be added. Cancelling
+SHALL add nothing. When every ingredient's name is already saved, the list SHALL NOT be shown.
 
 #### Scenario: Tick a new ingredient
 - **WHEN** the recipe has Salt and Honey, Salt is saved, and the user ticks Honey and saves
@@ -51,6 +51,11 @@ the list SHALL NOT be shown.
 - **WHEN** the calculator was loaded from "Friday night", the user adds Honey, saves, ticks Honey
   and chooses to update "Friday night"
 - **THEN** "Friday night" has Honey and Honey is added to the saved ingredients
+
+#### Scenario: Save from Convert
+- **WHEN** a converted recipe has Malt, Malt is not saved, and the user ticks Malt and saves it as a
+  recipe
+- **THEN** Malt is added to the saved ingredients
 
 #### Scenario: Nothing new
 - **WHEN** every ingredient in the recipe is a saved ingredient

@@ -10,11 +10,16 @@ portion is and the ingredient percentages, and save the result as a recipe.
 ### Requirement: Calculator screen
 The app SHALL open on the dough calculator. It SHALL show the portions, the portion weight, a
 control for water's percentage and for each of the recipe's other ingredients, an Edit button for
-the ingredients, the weights table for the current values, and a "Start kneading" button.
+the ingredients, the weights table for the current values, and a "Start kneading" button. Next to
+saving and the saved recipes, it SHALL offer a way to open the Convert screen.
 
 #### Scenario: App opens on the calculator
 - **WHEN** the user opens the app
 - **THEN** the dough calculator is shown with the weights table for its current values
+
+#### Scenario: Convert is offered
+- **WHEN** the calculator is shown and its ingredients are not being edited
+- **THEN** the user can open the Convert screen from it
 
 ### Requirement: Portions
 The user SHALL set the number of portions with − and + buttons, one portion at a time, between 1 and
@@ -64,10 +69,10 @@ field as "± 1", "± 0.1" or "± 0.01". Water's control SHALL be labelled "Hydra
 ingredient's control SHALL use the ingredient's name. The field SHALL show the value with as many
 decimals as its precision. The user SHALL be able to type a new value, which sets the precision.
 The − and + buttons SHALL move one step and SHALL keep the precision. The − button SHALL be
-disabled at 0% and the + button at 100%.
+disabled at 0% and the + button at 200%.
 
-While the field holds something that is not a number from 0 to 100, the field SHALL say "Enter 0
-to 100", and the weights SHALL keep using the last accepted value. Leaving the field SHALL show the
+While the field holds something that is not a number from 0 to 200, the field SHALL say "Enter 0
+to 200", and the weights SHALL keep using the last accepted value. Leaving the field SHALL show the
 last accepted value again.
 
 #### Scenario: Water is labelled as hydration
@@ -82,13 +87,17 @@ last accepted value again.
 - **WHEN** Yeast is 0.01% with a step of 0.01 and the user taps −
 - **THEN** the field shows "0.00" and the − button is disabled
 
+#### Scenario: Above 100% is accepted
+- **WHEN** water is 100% with a step of 1 and the user taps +
+- **THEN** water becomes 101%
+
 #### Scenario: Buttons stop at the range ends
-- **WHEN** an ingredient is at 100%
+- **WHEN** an ingredient is at 200%
 - **THEN** the + button next to it is disabled
 
 #### Scenario: Not a number
-- **WHEN** the user types "abc" or 120 for Salt
-- **THEN** the field says "Enter 0 to 100"
+- **WHEN** the user types "abc" or 250 for Salt
+- **THEN** the field says "Enter 0 to 200"
 - **AND** the weights table still uses the previous value for Salt
 
 ### Requirement: Default values
@@ -182,7 +191,7 @@ The Ingredients card SHALL have an Edit button. While editing:
 - The Edit button SHALL read "Done". Done SHALL be disabled while any name is blank or breaks the
   ingredient name rules. A name that breaks the rules SHALL show why under its field: "Flour and
   water are part of every recipe already", or ""<name>" is already in this recipe".
-- Saving, opening the saved recipes and "Start kneading" SHALL be unavailable.
+- Saving, opening the saved recipes, opening Convert and "Start kneading" SHALL be unavailable.
 - Back SHALL do the same as Done while Done is enabled, and nothing otherwise.
 
 Done SHALL apply the names, order, removals and additions to the calculator. An ingredient added
@@ -219,6 +228,10 @@ reopen with its values from before editing began.
 #### Scenario: Start kneading uses applied changes
 - **WHEN** the user adds Honey at 2% after tapping Done, then taps "Start kneading"
 - **THEN** the full recipe shows Honey
+
+#### Scenario: Convert unavailable while editing
+- **WHEN** the user taps Edit
+- **THEN** Convert cannot be opened until editing ends
 
 ### Requirement: Remove an ingredient while editing
 Removing an ingredient while editing SHALL take it out of the list at once and show a message
