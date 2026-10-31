@@ -44,6 +44,7 @@ internal fun IngredientsCard(
     onFinishEditing: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hasCounts = editor?.rows?.any { it.isCount } ?: recipe.ingredients.any { it.count != null }
     OutlinedCard(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -52,7 +53,11 @@ internal fun IngredientsCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionHeader(
                     title = "Ingredients",
-                    subtitle = "As a percentage of the flour weight",
+                    subtitle = if (hasCounts) {
+                        "As a percentage of the flour weight, or a count"
+                    } else {
+                        "As a percentage of the flour weight"
+                    },
                     modifier = Modifier.weight(1f)
                 )
                 if (editor == null) {

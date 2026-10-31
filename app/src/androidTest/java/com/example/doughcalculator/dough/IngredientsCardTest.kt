@@ -83,6 +83,18 @@ class IngredientsCardTest {
     }
 
     @Test
+    fun subtitleMentionsCountsOnlyWhenThereAreSome() {
+        val percentages = "As a percentage of the flour weight"
+        val withCounts = "As a percentage of the flour weight, or a count"
+        composeRule.onNodeWithText(percentages).assertExists()
+        composeRule.onNodeWithText("Edit").performClick()
+        composeRule.onAllNodesWithText("Count").onFirst().performClick()
+        composeRule.onNodeWithText(withCounts).assertExists()
+        composeRule.onNodeWithText("Done").performClick()
+        composeRule.onNodeWithText(withCounts).assertExists()
+    }
+
+    @Test
     fun editingOffersAKindAndGramsEachForCounts() {
         composeRule.onNodeWithText("Edit").performClick()
         composeRule.onAllNodesWithText("Count").onFirst().performClick()
