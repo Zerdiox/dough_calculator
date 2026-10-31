@@ -4,15 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class DoughRecipeTest {
-    private val recipe = DoughRecipe(
-        portionCount = 4,
-        portionWeightGrams = 250,
-        hydration = Percentage(hundredths = 6500, decimals = 0),
-        ingredients = listOf(
-            Ingredient(name = "Salt", percentage = Percentage(hundredths = 300, decimals = 1)),
-            Ingredient(name = "Yeast", percentage = Percentage(hundredths = 20, decimals = 2))
-        )
-    )
+    private val recipe = SaltAndYeastRecipe
 
     @Test
     fun ingredientsAddUpToTotalDoughWeight() {

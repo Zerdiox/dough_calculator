@@ -3,10 +3,6 @@ package com.example.doughcalculator.dough
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -15,10 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 
@@ -82,23 +74,14 @@ internal fun GramsField(
     modifier: Modifier = Modifier,
     unit: String = "g"
 ) {
-    val focusManager = LocalFocusManager.current
-    CompactTextField(
-        value = grams,
-        onValueChange = onGramsChange,
-        // The row's name is a separate text, so the field carries it for screen readers.
-        modifier = modifier
-            .width(FieldWidth)
-            .semantics { contentDescription = description },
-        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
-        suffix = unit.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+    UnitTextField(
+        text = grams,
+        onTextChange = onGramsChange,
+        description = description,
+        unit = unit,
+        keyboardType = KeyboardType.Decimal,
         isError = isError,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-        singleLine = true
+        modifier = modifier
     )
 }
 

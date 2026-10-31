@@ -71,16 +71,19 @@ internal fun <T> ValueStepper(
                     enabled = rules.canStepDown(value),
                     onClick = { step(rules.stepDown(value)) }
                 )
-                ValueField(
+                UnitTextField(
                     text = text,
                     onTextChange = { typed ->
-                        if (rules.maxLength?.let { typed.length > it } == true) return@ValueField
+                        if (rules.maxLength?.let { typed.length > it } == true) {
+                            return@UnitTextField
+                        }
                         typedText = typed
                         (rules.parse(typed) as? Parsed.Value)?.let { onValueChange(it.value) }
                     },
-                    label = label,
+                    description = label,
                     unit = rules.unit,
-                    acceptsDecimals = rules.acceptsDecimals,
+                    keyboardType =
+                        if (rules.acceptsDecimals) KeyboardType.Decimal else KeyboardType.Number,
                     isError = error != null,
                     modifier = Modifier.onFocusChanged {
                         typedText = if (it.isFocused) typedText ?: rules.fieldText(value) else null
@@ -117,14 +120,14 @@ private fun StepperNotes(hint: String, error: String?, modifier: Modifier = Modi
     }
 }
 
-/** The compact field: the text with [unit] after it, and a keyboard that fits the value. */
+/** A compact field for a value: the text with [unit] after it, and a keyboard that fits it. */
 @Composable
-private fun ValueField(
+internal fun UnitTextField(
     text: String,
     onTextChange: (String) -> Unit,
-    label: String,
+    description: String,
     unit: String,
-    acceptsDecimals: Boolean,
+    keyboardType: KeyboardType,
     isError: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -135,12 +138,12 @@ private fun ValueField(
         // The row's name is a separate text, so the field carries it for screen readers.
         modifier = modifier
             .width(FieldWidth)
-            .semantics { contentDescription = label },
+            .semantics { contentDescription = description },
         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
         suffix = unit.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
         isError = isError,
         keyboardOptions = KeyboardOptions(
-            keyboardType = if (acceptsDecimals) KeyboardType.Decimal else KeyboardType.Number,
+            keyboardType = keyboardType,
             imeAction = ImeAction.Done
         ),
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),

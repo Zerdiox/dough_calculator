@@ -144,22 +144,12 @@ class DoughDataFormatTest {
     @Test
     fun upgradeTurnsFixedIngredientsIntoNamedOnes() {
         val data = read(storedJson)
-        val expected = DoughRecipe(
-            portionCount = 4,
-            portionWeightGrams = 250,
-            hydration = Percentage(hundredths = 6200, decimals = 0),
-            ingredients = listOf(
-                Ingredient(name = "Salt", percentage = Percentage(hundredths = 300, decimals = 1)),
-                Ingredient(name = "Yeast", percentage = Percentage(hundredths = 20, decimals = 2))
-            )
-        )
-        assertEquals(expected, data.savedRecipes.single().recipe)
         assertEquals(
-            expected.copy(
-                portionCount = 6,
-                portionWeightGrams = 280,
-                hydration = Percentage(hundredths = 6500, decimals = 0)
-            ),
+            SaltAndYeastRecipe.copy(hydration = Percentage(hundredths = 6200, decimals = 0)),
+            data.savedRecipes.single().recipe
+        )
+        assertEquals(
+            SaltAndYeastRecipe.copy(portionCount = 6, portionWeightGrams = 280),
             data.currentRecipe
         )
     }

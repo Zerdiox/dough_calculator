@@ -19,21 +19,8 @@ class ResetMessageTest {
 
     private fun showCalculator(resetMessagePending: Boolean) {
         composeRule.setContent {
-            DoughCalculatorContent(
-                recipe = DefaultDoughRecipe,
-                loadedRecipeName = null,
-                ingredientEditor = null,
-                savedIngredients = emptyList(),
+            TestCalculatorContent(
                 resetMessagePending = resetMessagePending,
-                onRecipeChange = {},
-                onStartEditing = {},
-                onEditorChange = {},
-                onFinishEditing = {},
-                onSaveRecipe = { _, _ -> },
-                onUpdateLoadedRecipe = {},
-                onOpenSavedRecipes = {},
-                onOpenConvert = {},
-                onOpenFullRecipe = {},
                 onDismissResetMessage = { dismissCount++ }
             )
         }

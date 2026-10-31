@@ -17,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.doughcalculator.clickDirectly
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -67,9 +68,9 @@ class ConvertRecipeScreenTest {
     }
 
     private fun saveAs(name: String) {
-        composeRule.onNodeWithText("Save as recipe").performClick()
+        composeRule.onNodeWithText("Save as recipe").clickDirectly()
         composeRule.onNodeWithText("Name").performTextInput(name)
-        composeRule.onNodeWithText("Save").performClick()
+        composeRule.onNodeWithText("Save").clickDirectly()
     }
 
     @Test
@@ -125,7 +126,7 @@ class ConvertRecipeScreenTest {
     fun useInCalculatorSendsTheRecipe() {
         typeGrams("Flour", "500")
         typeGrams("Water", "325")
-        composeRule.onNodeWithText("Use in calculator").performClick()
+        composeRule.onNodeWithText("Use in calculator").clickDirectly()
         assertEquals(listOf(206), used.map { it.portionWeightGrams })
     }
 
@@ -133,11 +134,11 @@ class ConvertRecipeScreenTest {
     fun savingOffersToAddNewNamesAndThenOpensTheRecipe() {
         typeGrams("Flour", "500")
         addRow("Malt", "5")
-        composeRule.onNodeWithText("Save as recipe").performClick()
+        composeRule.onNodeWithText("Save as recipe").clickDirectly()
         composeRule.onNodeWithText("Add to saved ingredients").assertExists()
-        composeRule.onAllNodesWithText("Malt").onLast().performClick()
+        composeRule.onAllNodesWithText("Malt").onLast().clickDirectly()
         composeRule.onNodeWithText("Name").performTextInput("Book")
-        composeRule.onNodeWithText("Save").performClick()
+        composeRule.onNodeWithText("Save").clickDirectly()
         assertEquals(listOf("Book"), saves.map { it.first })
         assertEquals(setOf("Malt"), saves.single().third)
         assertEquals(listOf("Book"), opened)
@@ -146,7 +147,7 @@ class ConvertRecipeScreenTest {
     @Test
     fun savingWithAddMoreClearsAndConfirms() {
         typeGrams("Flour", "500")
-        composeRule.onNodeWithText("Add more").performClick()
+        composeRule.onNodeWithText("Add more").clickDirectly()
         saveAs("Book")
         assertEquals(emptyList<String>(), opened)
         composeRule.onNodeWithText("Saved \"Book\"").assertExists()

@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.doughcalculator.clickDirectly
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -33,22 +34,12 @@ class LoadedRecipeSaveTest {
         savedIngredients: List<String> = emptyList()
     ) {
         composeRule.setContent {
-            DoughCalculatorContent(
+            TestCalculatorContent(
                 recipe = recipe,
                 loadedRecipeName = loadedRecipeName,
-                ingredientEditor = null,
                 savedIngredients = savedIngredients.map { SavedIngredient(it) },
-                resetMessagePending = false,
-                onRecipeChange = {},
-                onStartEditing = {},
-                onEditorChange = {},
-                onFinishEditing = {},
                 onSaveRecipe = { name, namesToSave -> saves += name to namesToSave },
-                onUpdateLoadedRecipe = { updates += it },
-                onOpenSavedRecipes = {},
-                onOpenConvert = {},
-                onOpenFullRecipe = {},
-                onDismissResetMessage = {}
+                onUpdateLoadedRecipe = { updates += it }
             )
         }
         composeRule.onNodeWithContentDescription("Save recipe").performClick()
@@ -75,7 +66,7 @@ class LoadedRecipeSaveTest {
         tapSave(loadedRecipeName = "Friday night")
         composeRule.onNodeWithText("Save as new…").performClick()
         composeRule.onNodeWithText("Name").performTextInput("Wetter Friday")
-        composeRule.onNodeWithText("Save").performClick()
+        composeRule.onNodeWithText("Save").clickDirectly()
         assertEquals(listOf("Wetter Friday"), savedNames)
         assertEquals(0, updateCount)
     }
@@ -122,7 +113,7 @@ class LoadedRecipeSaveTest {
         tapSaveWithNewNames(loadedRecipeName = null)
         checkbox("Honey").performClick()
         composeRule.onNodeWithText("Name").performTextInput("Honey night")
-        composeRule.onNodeWithText("Save").performClick()
+        composeRule.onNodeWithText("Save").clickDirectly()
         assertEquals(listOf("Honey night" to setOf("Honey")), saves)
     }
 
@@ -130,7 +121,7 @@ class LoadedRecipeSaveTest {
     fun savingWithoutTicksReportsNoNames() {
         tapSaveWithNewNames(loadedRecipeName = null)
         composeRule.onNodeWithText("Name").performTextInput("Truffle night")
-        composeRule.onNodeWithText("Save").performClick()
+        composeRule.onNodeWithText("Save").clickDirectly()
         assertEquals(listOf("Truffle night" to emptySet<String>()), saves)
     }
 
@@ -153,7 +144,7 @@ class LoadedRecipeSaveTest {
         checkbox("Honey").assertIsOn()
         checkbox("Truffle oil").assertIsOff()
         composeRule.onNodeWithText("Name").performTextInput("Honey night")
-        composeRule.onNodeWithText("Save").performClick()
+        composeRule.onNodeWithText("Save").clickDirectly()
         assertEquals(listOf("Honey night" to setOf("Honey")), saves)
         assertEquals(0, updateCount)
     }
