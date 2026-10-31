@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.dependency.analysis)
 }
 
 android {
@@ -41,6 +42,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Installs next to the real app, so trying a build can't touch its saved recipes.
+            applicationIdSuffix = ".dev"
+        }
         release {
             if (keystoreProperties.getProperty("storeFile") != null) {
                 signingConfig = signingConfigs.getByName("release")

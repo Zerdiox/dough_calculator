@@ -12,6 +12,19 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.spotless)
+    alias(libs.plugins.dependency.analysis)
+    alias(libs.plugins.cpd)
+}
+
+// Reports copy-pasted Kotlin. It names the sources itself, since it only finds Java plugin sources.
+cpd {
+    language = "kotlin"
+    toolVersion = libs.versions.pmd.get()
+}
+
+tasks.cpdCheck {
+    source = fileTree("app/src") { include("**/*.kt") }
+    ignoreFailures = true
 }
 
 // Formats all Kotlin sources and Gradle scripts with ktlint (rules in .editorconfig).
