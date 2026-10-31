@@ -31,6 +31,11 @@ class RecipeConversionTest {
         .withRow("Salt", "15")
         .withRow("Yeast", "1")
 
+    @Test
+    fun convertedRecipeHasNoNote() {
+        assertEquals("", bookRecipe.toRecipe()?.notes)
+    }
+
     /** Adds a "Count" row named [name] holding [amount] and [gramsEach]. */
     private fun ConversionDraft.withCount(
         name: String,

@@ -34,6 +34,19 @@ class DoughDataFormatTest {
     """.trimIndent()
 
     @Test
+    fun recipesStoredBeforeNotesHaveNoNote() {
+        val data = read(storedJson)
+        assertEquals("", data.currentRecipe.notes)
+        assertEquals("", data.savedRecipes.single().recipe.notes)
+    }
+
+    @Test
+    fun notesSurviveWritingAndReading() {
+        val recipe = DefaultDoughRecipe.copy(notes = "- Tipo 00\n\n1. Mix\n2. Rest")
+        assertEquals(recipe, read(write(DoughData(currentRecipe = recipe))).currentRecipe)
+    }
+
+    @Test
     fun storedDataStillLoads() {
         val data = read(storedJson)
         assertEquals(6, data.currentRecipe.portionCount)

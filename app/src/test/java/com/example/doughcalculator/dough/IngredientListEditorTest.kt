@@ -17,6 +17,16 @@ class IngredientListEditorTest {
     private fun IngredientListEditor.keyOf(name: String) = rows.first { it.name == name }.key
 
     @Test
+    fun doneKeepsANoteChangedWhileEditing() {
+        var finished: DoughRecipe? = null
+        val editing = IngredientEditing(onFinish = { finished = it })
+        editing.start(listOf(salt))
+        editing.finish(DefaultDoughRecipe.copy(notes = "Changed"))
+        assertEquals("Changed", finished?.notes)
+        assertEquals(listOf(salt), finished?.ingredients)
+    }
+
+    @Test
     fun startsWithOneRowPerIngredient() {
         assertEquals(listOf("Salt", "Yeast", "Honey"), editor.names)
         assertEquals(

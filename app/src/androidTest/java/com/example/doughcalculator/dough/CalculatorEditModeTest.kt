@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -57,12 +58,9 @@ class CalculatorEditModeTest {
             )
         }
         composeRule.setContent {
-            DoughCalculatorContent(
+            TestCalculatorContent(
                 recipe = recipe,
-                loadedRecipeName = null,
                 ingredientEditor = editor,
-                savedIngredients = emptyList(),
-                resetMessagePending = false,
                 onRecipeChange = { recipe = it },
                 onStartEditing = { editor = IngredientListEditor(recipe.ingredients) },
                 onEditorChange = { editor = it },
@@ -71,19 +69,14 @@ class CalculatorEditModeTest {
                         recipe = recipe.copy(ingredients = it)
                         editor = null
                     }
-                },
-                onSaveRecipe = { _, _ -> },
-                onUpdateLoadedRecipe = {},
-                onOpenSavedRecipes = {},
-                onOpenConvert = {},
-                onOpenFullRecipe = {},
-                onDismissResetMessage = {}
+                }
             )
         }
     }
 
-    // Name fields, leaving out the portion weight field.
-    private val nameField = hasSetTextAction() and !hasContentDescription("Portion weight")
+    // Name fields, leaving out the portion weight and notes fields.
+    private val nameField =
+        hasSetTextAction() and !hasContentDescription("Portion weight") and !hasText("Notes")
 
     private fun names() = composeRule.onAllNodes(nameField).fetchSemanticsNodes()
         .map { it.config[SemanticsProperties.EditableText].text }

@@ -17,8 +17,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/**
+ * The recipe on the calculator. [revision] goes up each time the recipe is replaced as a whole, and
+ * travels with it so the screen can't start anew from an earlier recipe.
+ */
+data class CalculatorRecipe(val recipe: DoughRecipe, val revision: Int)
+
+private fun CalculatorRecipe?.replacedBy(recipe: DoughRecipe) =
+    CalculatorRecipe(recipe, (this?.revision ?: 0) + 1)
 
 /**
  * Holds the calculator and saved recipes for the screens. Writes run in [writeScope], which
@@ -28,13 +38,14 @@ class DoughViewModel(
     private val repository: DoughRepository,
     private val writeScope: CoroutineScope
 ) : ViewModel() {
-    private val editedRecipe = MutableStateFlow<DoughRecipe?>(null)
+    private val editedCalculator = MutableStateFlow<CalculatorRecipe?>(null)
     private var calculatorWrite: Job? = null
 
     /** The recipe on the calculator, or `null` while it is still loading. */
-    val recipe: StateFlow<DoughRecipe?> =
-        combine(repository.data, editedRecipe) { data, edited -> edited ?: data.currentRecipe }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+    val calculator: StateFlow<CalculatorRecipe?> =
+        combine(repository.data, editedCalculator) { data, edited ->
+            edited ?: CalculatorRecipe(data.currentRecipe, revision = 0)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     /** The saved recipes, or `null` while they are still loading. */
     val savedRecipes: StateFlow<List<SavedRecipe>?> = repository.data
@@ -68,7 +79,7 @@ class DoughViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
     fun updateRecipe(recipe: DoughRecipe) {
-        editedRecipe.value = recipe
+        editedCalculator.update { CalculatorRecipe(recipe, it?.revision ?: 0) }
         // Saving waits for a short pause, so typing or stepping doesn't write on every change.
         writeCalculator {
             delay(SAVE_DEBOUNCE_MILLIS)
@@ -77,14 +88,14 @@ class DoughViewModel(
     }
 
     fun loadRecipe(savedRecipe: SavedRecipe) {
-        editedRecipe.value = savedRecipe.recipe
+        editedCalculator.update { it.replacedBy(savedRecipe.recipe) }
         // Not cancellable: a change made right after must not cut off the link to the recipe.
         writeCalculator { withContext(NonCancellable) { repository.loadRecipe(savedRecipe) } }
     }
 
     /** Puts [recipe] on the calculator, which then counts as not loaded from any saved recipe. */
     fun useRecipe(recipe: DoughRecipe) {
-        editedRecipe.value = recipe
+        editedCalculator.update { it.replacedBy(recipe) }
         // Not cancellable: a change made right after must not leave the old link in place.
         writeCalculator { withContext(NonCancellable) { repository.useRecipe(recipe) } }
     }

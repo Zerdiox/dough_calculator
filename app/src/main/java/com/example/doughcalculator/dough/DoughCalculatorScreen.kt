@@ -163,6 +163,10 @@ private fun CalculatorBody(
         ) {
             Text(text = "Start kneading", style = MaterialTheme.typography.titleMedium)
         }
+        RecipeNotesField(
+            initialNotes = recipe.notes,
+            onNotesChange = { onRecipeChange(recipe.copy(notes = it)) }
+        )
     }
 }
 

@@ -15,7 +15,9 @@ data class DoughRecipe(
     @SerialName("ballWeightGrams") val portionWeightGrams: Int,
     val hydration: Percentage,
     /** The ingredients besides flour and water, in the order the user gave them. */
-    val ingredients: List<Ingredient>
+    val ingredients: List<Ingredient>,
+    /** Free text as the note editor's HTML, which keeps lists and any typed symbol as they are. */
+    val notes: String = ""
 ) {
     val totalDoughGrams: Int get() = portionCount * portionWeightGrams
 

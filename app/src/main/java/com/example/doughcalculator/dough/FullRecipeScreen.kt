@@ -79,6 +79,7 @@ fun FullRecipeScreen(
                 }
             )
             DoughResultCard(recipe = recipe)
+            RecipeNotes(notes = recipe.notes)
             Text(
                 text = "The screen stays on while this recipe is open.",
                 style = MaterialTheme.typography.bodySmall,

@@ -37,6 +37,43 @@ class DoughRepositoryTest {
     }
 
     @Test
+    fun savingAsNewKeepsTheNote() = runBlocking {
+        repository.saveRecipe("Noted", wetter.copy(notes = "Mix"))
+        assertEquals("Mix", repository.data.first().savedRecipes.last().recipe.notes)
+    }
+
+    @Test
+    fun updatingChangesTheNoteOfThatRecipeOnly() = runBlocking {
+        repository.updateSavedRecipe(fridayNight.id, fridayNight.recipe.copy(notes = "Mix"))
+        val recipes = repository.data.first().savedRecipes
+        assertEquals("Mix", recipes.first { it.id == fridayNight.id }.recipe.notes)
+        assertEquals("", recipes.first { it.id == party.id }.recipe.notes)
+    }
+
+    @Test
+    fun loadingReplacesTheCalculatorNote() = runBlocking {
+        repository.saveCurrentRecipe(party.recipe.copy(notes = "Old"))
+        repository.loadRecipe(fridayNight)
+        assertEquals("", repository.data.first().currentRecipe.notes)
+    }
+
+    @Test
+    fun usingARecipeClearsTheCalculatorNote() = runBlocking {
+        repository.saveCurrentRecipe(party.recipe.copy(notes = "Old"))
+        repository.useRecipe(wetter)
+        assertEquals("", repository.data.first().currentRecipe.notes)
+    }
+
+    @Test
+    fun restoringADeletedRecipeKeepsItsNote() = runBlocking {
+        val noted = fridayNight.copy(recipe = fridayNight.recipe.copy(notes = "Mix"))
+        repository.updateSavedRecipe(noted.id, noted.recipe)
+        repository.deleteRecipe(noted.id)
+        repository.restoreRecipe(noted, 0)
+        assertEquals("Mix", repository.data.first().savedRecipes.first().recipe.notes)
+    }
+
+    @Test
     fun loadingStoresTheValuesAndTheLinkTogether() = runBlocking {
         repository.loadRecipe(party)
         // One write: the file on disk holds both, not just the data the repository caches.

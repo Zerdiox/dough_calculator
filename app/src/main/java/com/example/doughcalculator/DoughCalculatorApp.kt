@@ -2,6 +2,7 @@ package com.example.doughcalculator
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -105,33 +106,39 @@ private fun EntryProviderScope<NavKey>.calculatorEntry(
     onOpenFullRecipe: (DoughRecipe) -> Unit
 ) {
     entry<CalculatorKey> {
-        val recipe by viewModel.recipe.collectAsStateWithLifecycle()
+        val calculator by viewModel.calculator.collectAsStateWithLifecycle()
         val loadedRecipe by viewModel.loadedRecipe.collectAsStateWithLifecycle()
         val ingredientEditor by viewModel.ingredientEditing.editor.collectAsStateWithLifecycle()
         val savedIngredients by viewModel.savedIngredients.collectAsStateWithLifecycle()
         val resetMessagePending by viewModel.resetMessagePending.collectAsStateWithLifecycle()
-        val currentRecipe = recipe ?: return@entry
-        DoughCalculatorContent(
-            recipe = currentRecipe,
-            loadedRecipeName = loadedRecipe?.name,
-            ingredientEditor = ingredientEditor,
-            savedIngredients = savedIngredients.orEmpty(),
-            resetMessagePending = resetMessagePending,
-            onRecipeChange = viewModel::updateRecipe,
-            onStartEditing = { viewModel.ingredientEditing.start(currentRecipe.ingredients) },
-            onEditorChange = viewModel.ingredientEditing::change,
-            onFinishEditing = { viewModel.ingredientEditing.finish(currentRecipe) },
-            onSaveRecipe = { name, namesToSave ->
-                viewModel.saveRecipe(name, currentRecipe, namesToSave)
-            },
-            onUpdateLoadedRecipe = { namesToSave ->
-                loadedRecipe?.let { viewModel.updateSavedRecipe(it.id, currentRecipe, namesToSave) }
-            },
-            onOpenSavedRecipes = onOpenSavedRecipes,
-            onOpenConvert = { onOpenConvert(currentRecipe.portionCount) },
-            onOpenFullRecipe = { onOpenFullRecipe(currentRecipe) },
-            onDismissResetMessage = viewModel::dismissResetMessage
-        )
+        val current = calculator ?: return@entry
+        val currentRecipe = current.recipe
+        // A recipe replaced as a whole starts the screen anew, so nothing typed before stays.
+        key(current.revision) {
+            DoughCalculatorContent(
+                recipe = currentRecipe,
+                loadedRecipeName = loadedRecipe?.name,
+                ingredientEditor = ingredientEditor,
+                savedIngredients = savedIngredients.orEmpty(),
+                resetMessagePending = resetMessagePending,
+                onRecipeChange = viewModel::updateRecipe,
+                onStartEditing = { viewModel.ingredientEditing.start(currentRecipe.ingredients) },
+                onEditorChange = viewModel.ingredientEditing::change,
+                onFinishEditing = { viewModel.ingredientEditing.finish(currentRecipe) },
+                onSaveRecipe = { name, namesToSave ->
+                    viewModel.saveRecipe(name, currentRecipe, namesToSave)
+                },
+                onUpdateLoadedRecipe = { namesToSave ->
+                    loadedRecipe?.let {
+                        viewModel.updateSavedRecipe(it.id, currentRecipe, namesToSave)
+                    }
+                },
+                onOpenSavedRecipes = onOpenSavedRecipes,
+                onOpenConvert = { onOpenConvert(currentRecipe.portionCount) },
+                onOpenFullRecipe = { onOpenFullRecipe(currentRecipe) },
+                onDismissResetMessage = viewModel::dismissResetMessage
+            )
+        }
     }
 }
 

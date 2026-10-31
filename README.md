@@ -44,6 +44,9 @@ has no part in the weights at all.
 - **Full recipe screen** for while you're actually making the dough. The
   display stays on, and you can change the batch size there without editing
   the saved recipe.
+- **Notes** on every recipe, such as a flour blend or the steps to follow. Write
+  them at the bottom of the calculator, where typing `- ` or `1. ` starts a list,
+  and they show under the weights on the full recipe screen.
 
 The current recipe, the saved recipes and the saved ingredients are written to
 `dough.json` via DataStore, so they survive a restart. The app asks for no
