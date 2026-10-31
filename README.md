@@ -10,7 +10,7 @@
 An Android app that works out how much of each ingredient to weigh out for a
 batch of dough: flour, water, and whatever else the recipe calls for.
 
-Recipes are stored as baker's percentages, where every ingredient is expressed
+Recipes are stored as baker's percentages, where an ingredient is expressed
 relative to the flour weight and flour itself is always 100%. That makes a
 recipe independent of batch size: you set how many portions you want and how
 heavy each portion should be, and the app solves for the flour weight that
