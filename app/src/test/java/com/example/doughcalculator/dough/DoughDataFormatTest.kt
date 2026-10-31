@@ -53,7 +53,7 @@ class DoughDataFormatTest {
     @Test
     fun writtenDataRecordsTheFormatVersion() {
         val json = write(DoughData())
-        assertTrue(json, json.contains("\"version\":2"))
+        assertTrue(json, json.contains("\"version\":3"))
     }
 
     @Test
@@ -91,7 +91,7 @@ class DoughDataFormatTest {
 
     @Test
     fun newerVersionIsUnreadable() {
-        assertUnreadable(storedJson.withVersion(3))
+        assertUnreadable(storedJson.withVersion(4))
     }
 
     @Test
@@ -248,7 +248,43 @@ class DoughDataFormatTest {
 
     @Test
     fun dataWithoutSavedIngredientsStartsWithTheDefaults() {
-        assertEquals(listOf("Olive oil", "Salt", "Yeast"), read(storedJson).savedIngredients)
+        assertEquals(
+            listOf("Olive oil", "Salt", "Yeast"),
+            read(storedJson).savedIngredients.map { it.name }
+        )
+    }
+
+    @Test
+    fun savedNamesBecomePercentageSavedIngredients() {
+        val json = """{ "version": 2, "savedIngredients": ["Honey", "Malt"] }"""
+        assertEquals(
+            listOf(SavedIngredient("Honey"), SavedIngredient("Malt")),
+            read(json).savedIngredients
+        )
+    }
+
+    @Test
+    fun ingredientsStoredWithoutACountStayPercentages() {
+        val data = read(storedJson)
+        assertTrue(data.currentRecipe.ingredients.all { it.count == null })
+    }
+
+    @Test
+    fun countsAndSavedCountsReadBackTheSame() {
+        val data = DoughData(
+            currentRecipe = DefaultDoughRecipe.copy(
+                ingredients = listOf(
+                    Ingredient("Eggs", Percentage(0, 0), IngredientCount(3, 4, 5250)),
+                    Ingredient("Cloves", Percentage(0, 0), IngredientCount(2, 1))
+                )
+            ),
+            savedIngredients = listOf(
+                SavedIngredient("Eggs", isCount = true, gramsEachHundredths = 5250),
+                SavedIngredient("Cloves", isCount = true),
+                SavedIngredient("Salt")
+            )
+        )
+        assertEquals(data, read(write(data)))
     }
 
     private fun tableText(recipe: DoughRecipe) =

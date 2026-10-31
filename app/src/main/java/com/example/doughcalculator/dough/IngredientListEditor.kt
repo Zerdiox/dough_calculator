@@ -3,16 +3,42 @@ package com.example.doughcalculator.dough
 /**
  * A row of the ingredient list while it is edited. [key] tells rows apart while their names change,
  * and lives only as long as the edit. [isAdded] marks rows added in this edit.
+ *
+ * A row holds both a [percentage] and a [count], so changing [isCount] back in the same edit
+ * restores what it held; only the chosen kind is applied.
  */
 data class EditedIngredient(
     val key: Int,
     val name: String,
     val percentage: Percentage,
-    val isAdded: Boolean
+    val isAdded: Boolean,
+    val isCount: Boolean = false,
+    val count: IngredientCount = NEW_COUNT,
+    /** The weight of one as typed; blank for none. */
+    val gramsEach: String = ""
 ) {
+    /** Why [gramsEach] can't be used, or null when it can or the row isn't a count. */
+    val gramsEachError: String? get() = if (isCount) gramsEachErrorOf(gramsEach) else null
+
+    fun toIngredient(): Ingredient = if (isCount) {
+        Ingredient(
+            name.trim(),
+            NEW_PERCENTAGE,
+            count.copy(gramsEachHundredths = gramsEachHundredthsOf(gramsEach))
+        )
+    } else {
+        Ingredient(name.trim(), percentage)
+    }
+
     /** The name as messages and screen readers say it, standing in for a blank one. */
     val displayName: String get() = displayNameOf(name)
 }
+
+/** What an ingredient added or changed to a percentage starts at: 0%, stepping by whole percents. */
+private val NEW_PERCENTAGE = Percentage(hundredths = 0, decimals = 0)
+
+/** What an ingredient changed to a count starts at; with nothing to scale, its portions don't matter. */
+private val NEW_COUNT = IngredientCount(halves = 0, forPortions = 1)
 
 /** [name] as messages and screen readers say it, standing in for a blank one. */
 internal fun displayNameOf(name: String): String = name.trim().ifEmpty { "new ingredient" }
@@ -51,14 +77,21 @@ data class IngredientListEditor private constructor(
 ) {
     constructor(ingredients: List<Ingredient>) : this(
         rows = ingredients.mapIndexed { index, ingredient ->
-            EditedIngredient(index, ingredient.name, ingredient.percentage, isAdded = false)
+            EditedIngredient(
+                key = index,
+                name = ingredient.name,
+                percentage = ingredient.percentage,
+                isAdded = false,
+                isCount = ingredient.count != null,
+                count = ingredient.count ?: NEW_COUNT,
+                gramsEach = ingredient.count?.gramsEachHundredths?.let(::gramsEachText).orEmpty()
+            )
         },
         lastRemoval = null,
         nextKey = ingredients.size
     )
 
-    fun rename(key: Int, name: String): IngredientListEditor =
-        copy(rows = rows.map { if (it.key == key) it.copy(name = name) else it })
+    fun rename(key: Int, name: String): IngredientListEditor = change(key) { it.copy(name = name) }
 
     fun move(fromIndex: Int, toIndex: Int): IngredientListEditor =
         copy(rows = rows.toMutableList().apply { add(toIndex, removeAt(fromIndex)) })
@@ -93,13 +126,15 @@ data class IngredientListEditor private constructor(
         return ingredientNameError(rows[index].name, rows.take(index).map { it.name })
     }
 
-    /** Whether every name can be used, so the edit can be applied. */
-    val canApply: Boolean get() = rows.all { nameError(it.key) == null }
+    /** Whether every name and "Grams each" can be used, so the edit can be applied. */
+    val canApply: Boolean get() = rows.all {
+        nameError(it.key) == null && it.gramsEachError == null
+    }
 
-    /** The edited list with trimmed names, or null while any name can't be used. */
+    /** The edited list with trimmed names, or null while anything can't be used. */
     fun toIngredients(): List<Ingredient>? {
         if (!canApply) return null
-        return rows.map { Ingredient(it.name.trim(), it.percentage) }
+        return rows.map { it.toIngredient() }
     }
 
     /**
@@ -111,7 +146,24 @@ data class IngredientListEditor private constructor(
         return namesToOffer(row.name, rows.filter { it.key != key }.map { it.name }, savedNames)
     }
 
-    private companion object {
-        val NEW_PERCENTAGE = Percentage(hundredths = 0, decimals = 0)
-    }
+    internal fun change(
+        key: Int,
+        change: (EditedIngredient) -> EditedIngredient
+    ): IngredientListEditor = copy(rows = rows.map { if (it.key == key) change(it) else it })
 }
+
+fun IngredientListEditor.setCount(key: Int, isCount: Boolean): IngredientListEditor =
+    change(key) { it.copy(isCount = isCount) }
+
+fun IngredientListEditor.changeGramsEach(key: Int, text: String): IngredientListEditor =
+    change(key) { it.copy(gramsEach = text) }
+
+/** Fills row [key] in from [saved]: its name and how it is measured. */
+fun IngredientListEditor.pick(key: Int, saved: SavedIngredient): IngredientListEditor =
+    change(key) {
+        it.copy(name = saved.name, isCount = saved.isCount, gramsEach = saved.gramsEachText)
+    }
+
+/** Why the "Grams each" of row [key] can't be used, or null when it can. */
+fun IngredientListEditor.gramsEachError(key: Int): String? =
+    rows.firstOrNull { it.key == key }?.gramsEachError

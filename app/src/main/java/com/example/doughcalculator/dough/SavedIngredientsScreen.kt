@@ -32,9 +32,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedIngredientsScreen(
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     onDeleteIngredient: (String) -> Unit,
-    onRestoreIngredient: (String) -> Unit,
+    onRestoreIngredient: (SavedIngredient) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -56,14 +56,15 @@ fun SavedIngredientsScreen(
             return@Scaffold
         }
         LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(savedIngredients, key = { it }) { name ->
+            items(savedIngredients, key = { it.name }) { ingredient ->
                 SavedIngredientItem(
-                    name = name,
+                    ingredient = ingredient,
                     onDelete = {
-                        onDeleteIngredient(name)
+                        onDeleteIngredient(ingredient.name)
                         scope.launch {
-                            if (snackbarHostState.showUndoMessage("Deleted \"$name\"")) {
-                                onRestoreIngredient(name)
+                            val message = "Deleted \"${ingredient.name}\""
+                            if (snackbarHostState.showUndoMessage(message)) {
+                                onRestoreIngredient(ingredient)
                             }
                         }
                     },
@@ -75,20 +76,33 @@ fun SavedIngredientsScreen(
 }
 
 @Composable
-private fun SavedIngredientItem(name: String, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+private fun SavedIngredientItem(
+    ingredient: SavedIngredient,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     ListItem(
-        headlineContent = { Text(name) },
+        headlineContent = { Text(ingredient.name) },
+        supportingContent = ingredient.setupText?.let { { Text(it) } },
         modifier = modifier,
         trailingContent = {
             IconButton(onClick = onDelete) {
                 Icon(
                     painter = painterResource(R.drawable.ic_delete),
-                    contentDescription = "Delete $name"
+                    contentDescription = "Delete ${ingredient.name}"
                 )
             }
         }
     )
 }
+
+/** How a count ingredient is set up, or null for a percentage ingredient. */
+private val SavedIngredient.setupText: String?
+    get() = when {
+        !isCount -> null
+        gramsEachHundredths == null -> "Count"
+        else -> "Count · $gramsEachText g each"
+    }
 
 @Composable
 private fun EmptySavedIngredients(modifier: Modifier = Modifier) {
@@ -112,7 +126,11 @@ private fun EmptySavedIngredients(modifier: Modifier = Modifier) {
 private fun SavedIngredientsScreenPreview() {
     DoughCalculatorTheme {
         SavedIngredientsScreen(
-            savedIngredients = listOf("Olive oil", "Salt", "Yeast"),
+            savedIngredients = listOf(
+                SavedIngredient("Eggs", isCount = true, gramsEachHundredths = 5000),
+                SavedIngredient("Olive oil"),
+                SavedIngredient("Salt")
+            ),
             onDeleteIngredient = {},
             onRestoreIngredient = {},
             onBack = {}

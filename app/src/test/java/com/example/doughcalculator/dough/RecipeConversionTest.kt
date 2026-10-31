@@ -31,6 +31,106 @@ class RecipeConversionTest {
         .withRow("Salt", "15")
         .withRow("Yeast", "1")
 
+    /** Adds a "Count" row named [name] holding [amount] and [gramsEach]. */
+    private fun ConversionDraft.withCount(
+        name: String,
+        amount: String,
+        gramsEach: String = ""
+    ): ConversionDraft {
+        val draft = withRow(name, amount)
+        val key = draft.keyOf(name)
+        return draft.copy(rows = draft.rows.setCount(key, true).changeGramsEach(key, gramsEach))
+    }
+
+    private val floured = empty.copy(flour = "500", water = "300")
+
+    @Test
+    fun countWithGramsEachCountsTowardsThePortions() {
+        val recipe = floured.withCount("Eggs", "2", "50").toRecipe()!!
+        assertEquals(225, recipe.portionWeightGrams)
+        assertEquals(IngredientCount(4, 4, 5000), recipe.ingredients.single().count)
+        assertEquals(Percentage(hundredths = 6000, decimals = 0), recipe.hydration)
+        assertEquals(500.0, recipe.amounts().flour, 0.001)
+    }
+
+    @Test
+    fun countWithoutGramsEachAddsNoWeight() {
+        val recipe = floured.withCount("Eggs", "2").toRecipe()!!
+        assertEquals(200, recipe.portionWeightGrams)
+        assertNull(recipe.ingredients.single().count?.gramsEachHundredths)
+    }
+
+    @Test
+    fun changingThePortionsKeepsTheTypedAmount() {
+        val recipe = floured.withCount("Eggs", "2", "50").copy(portionCount = 6).preview()!!
+        assertEquals(IngredientCount(4, 6, 5000), recipe.ingredients.single().count)
+        assertEquals("× 2", weightRows(recipe).last().percentText)
+    }
+
+    @Test
+    fun blankOrZeroCountIsLeftOut() {
+        listOf("", "0").forEach { amount ->
+            assertEquals(emptyList<String>(), floured.withCount("Eggs", amount).ingredientNames())
+        }
+    }
+
+    @Test
+    fun amountThatCantBeUsedBlocksConverting() {
+        val draft = floured.withCount("Eggs", "1.3")
+        assertEquals(
+            "Enter 0 to 100, in halves",
+            draft.rowGramsError(draft.keyOf("Eggs"))
+        )
+        assertNull(draft.toRecipe())
+        assertEquals(emptyList<Ingredient>(), draft.preview()!!.ingredients)
+    }
+
+    @Test
+    fun gramsEachThatCantBeUsedBlocksConverting() {
+        val draft = floured.withCount("Eggs", "2", "abc")
+        assertEquals("Enter grams", draft.rowGramsEachError(draft.keyOf("Eggs")))
+        assertNull(draft.toRecipe())
+        assertEquals(emptyList<Ingredient>(), draft.preview()!!.ingredients)
+    }
+
+    @Test
+    fun changingTheKindKeepsWhatIsTyped() {
+        val draft = floured.withRow("Eggs", "2")
+        val key = draft.keyOf("Eggs")
+        val switched = draft.rows.setCount(key, true)
+        assertEquals("2", switched.items.single().grams)
+        assertEquals("2", switched.setCount(key, false).items.single().grams)
+    }
+
+    @Test
+    fun undoRestoresAChoiceOfCount() {
+        val draft = floured.withCount("Eggs", "2", "50")
+        val restored = draft.rows.remove(draft.keyOf("Eggs")).undoRemove().items.single()
+        assertTrue(restored.isCount)
+        assertEquals("2", restored.grams)
+        assertEquals("50", restored.gramsEach)
+    }
+
+    @Test
+    fun pickingASavedCountKeepsTheTypedAmount() {
+        val draft = floured.withRow("", "2")
+        val key = draft.rows.items.single().key
+        val row = draft.rows.pick(key, SavedIngredient("Eggs", true, 5000)).items.single()
+        assertEquals("Eggs", row.name)
+        assertTrue(row.isCount)
+        assertEquals("2", row.grams)
+        assertEquals("50", row.gramsEach)
+    }
+
+    @Test
+    fun pickingASavedPercentageSetsGrams() {
+        val draft = floured.withCount("X", "2", "50")
+        val row = draft.rows.pick(draft.keyOf("X"), SavedIngredient("Malt")).items.single()
+        assertEquals("Malt", row.name)
+        assertFalse(row.isCount)
+        assertEquals("", row.gramsEach)
+    }
+
     @Test
     fun bookRecipeBecomesPercentages() {
         val expected = DoughRecipe(

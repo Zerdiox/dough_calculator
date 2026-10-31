@@ -22,9 +22,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
 /** The recipe's ingredient names that are not among [savedIngredients], ignoring case. */
-internal fun DoughRecipe.namesNotIn(savedIngredients: List<String>): List<String> =
+internal fun DoughRecipe.namesNotIn(savedIngredients: List<SavedIngredient>): List<String> =
     ingredients.map { it.name }.filter { name ->
-        savedIngredients.none { it.isSameNameAs(name) }
+        savedIngredients.none { it.name.isSameNameAs(name) }
     }
 
 /** Asks for a new recipe's name, with [newNamesChecklist] below the field. */

@@ -37,7 +37,7 @@ class LoadedRecipeSaveTest {
                 recipe = recipe,
                 loadedRecipeName = loadedRecipeName,
                 ingredientEditor = null,
-                savedIngredients = savedIngredients,
+                savedIngredients = savedIngredients.map { SavedIngredient(it) },
                 resetMessagePending = false,
                 onRecipeChange = {},
                 onStartEditing = {},

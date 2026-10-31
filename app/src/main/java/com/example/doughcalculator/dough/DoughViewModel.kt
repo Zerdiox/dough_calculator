@@ -47,7 +47,7 @@ class DoughViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     /** The saved ingredients, sorted ignoring case, or `null` while they are still loading. */
-    val savedIngredients: StateFlow<List<String>?> = repository.savedIngredients
+    val savedIngredients: StateFlow<List<SavedIngredient>?> = repository.savedIngredients
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     /**
@@ -111,8 +111,8 @@ class DoughViewModel(
         writeScope.launch { repository.deleteSavedIngredient(name) }
     }
 
-    fun restoreSavedIngredient(name: String) {
-        writeScope.launch { repository.restoreSavedIngredient(name) }
+    fun restoreSavedIngredient(ingredient: SavedIngredient) {
+        writeScope.launch { repository.restoreSavedIngredient(ingredient) }
     }
 
     fun dismissResetMessage() {

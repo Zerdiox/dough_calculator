@@ -137,7 +137,7 @@ private fun ValueField(
             .width(FieldWidth)
             .semantics { contentDescription = label },
         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
-        suffix = { Text(unit) },
+        suffix = unit.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
         isError = isError,
         keyboardOptions = KeyboardOptions(
             keyboardType = if (acceptsDecimals) KeyboardType.Decimal else KeyboardType.Number,

@@ -18,7 +18,8 @@ import kotlinx.serialization.json.jsonPrimitive
 internal typealias FormatUpgrade = (JsonObject) -> JsonObject
 
 /** Upgrades in order: the first turns version 1 into version 2. */
-internal val FormatUpgrades: List<FormatUpgrade> = listOf(upgradeToNamedIngredients)
+internal val FormatUpgrades: List<FormatUpgrade> =
+    listOf(upgradeToNamedIngredients, upgradeToSavedIngredients)
 
 /**
  * Reads and writes the stored data. The file records its format version, and data from an older

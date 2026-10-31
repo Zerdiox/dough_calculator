@@ -1,6 +1,7 @@
 package com.example.doughcalculator.dough
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class WeightRowsTest {
@@ -77,6 +78,39 @@ class WeightRowsTest {
             )
         )
         assertEquals(listOf("100%", "62%", "3.1%", "0.25%"), rows.map { it.percentText })
+    }
+
+    private fun withEggs(count: IngredientCount) = recipe.copy(
+        ingredients = listOf(Ingredient("Eggs", Percentage(0, 0), count))
+    )
+
+    @Test
+    fun countRowShowsAmountAndWeightWithoutPercentage() {
+        val row = weightRows(withEggs(IngredientCount(3, 4, gramsEachHundredths = 5000))).last()
+        assertEquals("Eggs", row.name)
+        assertEquals("× 1.5", row.percentText)
+        assertEquals("75 g", row.gramsText)
+    }
+
+    @Test
+    fun countRowWithoutGramsEachShowsNoWeight() {
+        val row = weightRows(withEggs(IngredientCount(4, 4))).last()
+        assertEquals("× 2", row.percentText)
+        assertNull(row.gramsText)
+    }
+
+    @Test
+    fun countAtZeroIsLeftOut() {
+        assertEquals(
+            listOf("Flour", "Water"),
+            weightRows(withEggs(IngredientCount(0, 4))).map { it.name }
+        )
+    }
+
+    @Test
+    fun countsUsingUpTheDoughLeaveOnlyTheirRow() {
+        val heavy = withEggs(IngredientCount(8, 4, gramsEachHundredths = 25000))
+        assertEquals(listOf("Eggs"), weightRows(heavy).map { it.name })
     }
 
     private fun row(grams: Double) = WeightRow(name = "Salt", percentText = "3%", grams = grams)

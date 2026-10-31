@@ -31,6 +31,101 @@ class IngredientListEditorTest {
     }
 
     @Test
+    fun choosingCountMakesAZeroCount() {
+        val ingredients = editor.setCount(editor.keyOf("Salt"), true).toIngredients()!!
+        assertEquals(Percentage(0, 0), ingredients.first().percentage)
+        assertEquals(0, ingredients.first().count?.halves)
+    }
+
+    @Test
+    fun changingTheKindBackRestoresWhatItHeld() {
+        val key = editor.keyOf("Salt")
+        assertEquals(salt, editor.setCount(key, true).setCount(key, false).toIngredients()!![0])
+
+        val eggs = Ingredient("Eggs", Percentage(0, 0), IngredientCount(4, 4, 5000))
+        val counted = IngredientListEditor(listOf(eggs))
+        val countKey = counted.keyOf("Eggs")
+        assertEquals(
+            listOf(eggs),
+            counted.setCount(countKey, false).setCount(countKey, true).toIngredients()
+        )
+    }
+
+    @Test
+    fun aCountChangedToAPercentageStartsAtZero() {
+        val eggs = Ingredient("Eggs", Percentage(0, 0), IngredientCount(4, 4))
+        val counted = IngredientListEditor(listOf(eggs))
+        assertEquals(
+            listOf(Ingredient("Eggs", Percentage(0, 0))),
+            counted.setCount(counted.keyOf("Eggs"), false).toIngredients()
+        )
+    }
+
+    @Test
+    fun gramsEachIsApplied() {
+        val key = editor.keyOf("Salt")
+        val typed = editor.setCount(key, true).changeGramsEach(key, "52,5")
+        assertEquals(5250, typed.toIngredients()!!.first().count?.gramsEachHundredths)
+    }
+
+    @Test
+    fun blankOrZeroGramsEachMeansNone() {
+        val key = editor.keyOf("Salt")
+        listOf("", "0", "0.00").forEach { text ->
+            val typed = editor.setCount(key, true).changeGramsEach(key, text)
+            assertNull(typed.toIngredients()!!.first().count?.gramsEachHundredths)
+        }
+    }
+
+    @Test
+    fun gramsEachThatCantBeUsedBlocksApplying() {
+        val key = editor.keyOf("Salt")
+        val typed = editor.setCount(key, true).changeGramsEach(key, "abc")
+        assertEquals("Enter grams", typed.gramsEachError(key))
+        assertFalse(typed.canApply)
+    }
+
+    @Test
+    fun gramsEachIsIgnoredOnAPercentageRow() {
+        val key = editor.keyOf("Salt")
+        val typed = editor.setCount(key, true).changeGramsEach(key, "abc").setCount(key, false)
+        assertNull(typed.gramsEachError(key))
+        assertTrue(typed.canApply)
+    }
+
+    @Test
+    fun undoRestoresCountAndGramsEach() {
+        val eggs = Ingredient("Eggs", Percentage(0, 0), IngredientCount(4, 4, 5000))
+        val counted = IngredientListEditor(listOf(eggs))
+        val restored = counted.remove(counted.keyOf("Eggs")).undoRemove()
+        assertEquals(listOf(eggs), restored.toIngredients())
+    }
+
+    @Test
+    fun pickingASavedCountSetsItUp() {
+        val added = editor.add()
+        val key = added.rows.last().key
+        val picked = added.pick(key, SavedIngredient("Eggs", isCount = true, 5000))
+        val row = picked.rows.last()
+        assertEquals("Eggs", row.name)
+        assertTrue(row.isCount)
+        assertEquals("50", row.gramsEach)
+        assertEquals(
+            IngredientCount(0, 1, 5000),
+            picked.toIngredients()!!.last().count
+        )
+    }
+
+    @Test
+    fun pickingASavedPercentageSetsItToPercent() {
+        val added = editor.add()
+        val key = added.rows.last().key
+        val picked = added.setCount(key, true).pick(key, SavedIngredient("Malt"))
+        assertFalse(picked.rows.last().isCount)
+        assertNull(picked.toIngredients()!!.last().count)
+    }
+
+    @Test
     fun renameChangesOnlyThatRow() {
         val renamed = editor.rename(editor.keyOf("Salt"), "Sea salt")
         assertEquals(listOf("Sea salt", "Yeast", "Honey"), renamed.names)

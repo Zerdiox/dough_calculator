@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 
-/** A name field offering the saved names while it has focus. */
+/** A name field offering the saved names while it has focus; [onNamePick] takes the one chosen. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun NameFieldWithSavedNames(
@@ -28,6 +28,7 @@ internal fun NameFieldWithSavedNames(
     error: String?,
     offeredNames: List<String>,
     onNameChange: (String) -> Unit,
+    onNamePick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var focused by remember { mutableStateOf(false) }
@@ -64,7 +65,7 @@ internal fun NameFieldWithSavedNames(
                 DropdownMenuItem(
                     text = { Text(offered) },
                     onClick = {
-                        onNameChange(offered)
+                        onNamePick(offered)
                         expanded = false
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding

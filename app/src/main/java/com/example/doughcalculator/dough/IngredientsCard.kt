@@ -37,7 +37,7 @@ import sh.calvin.reorderable.ReorderableColumn
 internal fun IngredientsCard(
     recipe: DoughRecipe,
     editor: IngredientListEditor?,
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     onRecipeChange: (DoughRecipe) -> Unit,
     onStartEditing: () -> Unit,
     onEditorChange: (IngredientListEditor) -> Unit,
@@ -90,18 +90,34 @@ private fun PercentageRows(
             onValueChange = { onRecipeChange(recipe.copy(hydration = it)) }
         )
         recipe.ingredients.forEachIndexed { index, ingredient ->
+            val onIngredientChange = { changed: Ingredient ->
+                val ingredients = recipe.ingredients.toMutableList()
+                ingredients[index] = changed
+                onRecipeChange(recipe.copy(ingredients = ingredients))
+            }
             // The stepper keeps half-typed text, which must stay with its ingredient.
             key(ingredient.name) {
-                ValueStepper(
-                    label = ingredient.name,
-                    value = ingredient.percentage,
-                    rules = PercentRules,
-                    onValueChange = { percentage ->
-                        val ingredients = recipe.ingredients.toMutableList()
-                        ingredients[index] = ingredient.copy(percentage = percentage)
-                        onRecipeChange(recipe.copy(ingredients = ingredients))
-                    }
-                )
+                val count = ingredient.count
+                if (count == null) {
+                    ValueStepper(
+                        label = ingredient.name,
+                        value = ingredient.percentage,
+                        rules = PercentRules,
+                        onValueChange = {
+                            onIngredientChange(ingredient.copy(percentage = it))
+                        }
+                    )
+                } else {
+                    ValueStepper(
+                        label = ingredient.name,
+                        value = count.halvesFor(recipe.portionCount),
+                        rules = CountRules,
+                        onValueChange = {
+                            val set = count.copy(halves = it, forPortions = recipe.portionCount)
+                            onIngredientChange(ingredient.copy(count = set))
+                        }
+                    )
+                }
             }
         }
     }
@@ -110,28 +126,14 @@ private fun PercentageRows(
 @Composable
 private fun EditRows(
     editor: IngredientListEditor,
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     onEditorChange: (IngredientListEditor) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // The drag library keeps the callback from when the list last changed.
     val currentEditor by rememberUpdatedState(editor)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.heightIn(min = ControlRowHeight),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Hydration",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = "In every recipe",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        HydrationEditRow()
         ReorderableColumn(
             list = editor.rows,
             onSettle = { from, to -> onEditorChange(currentEditor.move(from, to)) },
@@ -142,8 +144,21 @@ private fun EditRows(
                     EditRow(
                         row = row,
                         nameError = editor.nameError(row.key),
-                        offeredNames = editor.offeredNames(row.key, savedIngredients),
+                        gramsEachError = editor.gramsEachError(row.key),
+                        offeredNames = editor.offeredNames(
+                            row.key,
+                            savedIngredients.map { it.name }
+                        ),
                         onNameChange = { onEditorChange(editor.rename(row.key, it)) },
+                        onNamePick = { name ->
+                            savedIngredients.firstOrNull { it.name == name }?.let {
+                                onEditorChange(editor.pick(row.key, it))
+                            }
+                        },
+                        onIsCountChange = { onEditorChange(editor.setCount(row.key, it)) },
+                        onGramsEachChange = {
+                            onEditorChange(editor.changeGramsEach(row.key, it))
+                        },
                         onMoveUp = if (index > 0) {
                             { onEditorChange(editor.move(index, index - 1)) }
                         } else {
@@ -167,16 +182,78 @@ private fun EditRows(
     }
 }
 
+/** Hydration while editing, which can't be changed. */
+@Composable
+private fun HydrationEditRow(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.heightIn(min = ControlRowHeight),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Hydration",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "In every recipe",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
 /**
- * One ingredient while editing: a drag handle, its name and a remove button. [onMoveUp] and
- * [onMoveDown] are null where the row can't move that way.
+ * One ingredient while editing: a drag handle, its name, a remove button, and below them how it is
+ * measured. [onMoveUp] and [onMoveDown] are null where the row can't move that way.
  */
 @Composable
 private fun EditRow(
     row: EditedIngredient,
     nameError: String?,
+    gramsEachError: String?,
     offeredNames: List<String>,
     onNameChange: (String) -> Unit,
+    onNamePick: (String) -> Unit,
+    onIsCountChange: (Boolean) -> Unit,
+    onGramsEachChange: (String) -> Unit,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+    handleModifier: Modifier = Modifier
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        EditNameRow(
+            row = row,
+            nameError = nameError,
+            offeredNames = offeredNames,
+            onNameChange = onNameChange,
+            onNamePick = onNamePick,
+            onMoveUp = onMoveUp,
+            onMoveDown = onMoveDown,
+            onRemove = onRemove,
+            handleModifier = handleModifier
+        )
+        CountChoice(otherLabel = "%", isCount = row.isCount, onIsCountChange = onIsCountChange)
+        if (row.isCount) {
+            GramsEachRow(
+                displayName = row.displayName,
+                gramsEach = row.gramsEach,
+                error = gramsEachError,
+                onGramsEachChange = onGramsEachChange
+            )
+        }
+    }
+}
+
+/** The line of an edited ingredient with its drag handle, name and remove button. */
+@Composable
+private fun EditNameRow(
+    row: EditedIngredient,
+    nameError: String?,
+    offeredNames: List<String>,
+    onNameChange: (String) -> Unit,
+    onNamePick: (String) -> Unit,
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
     onRemove: () -> Unit,
@@ -215,6 +292,7 @@ private fun EditRow(
                 error = nameError,
                 offeredNames = offeredNames,
                 onNameChange = onNameChange,
+                onNamePick = onNamePick,
                 modifier = Modifier.weight(1f).padding(vertical = CompactFieldInset)
             )
         } else {

@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 /**
  * Everything the app stores: the recipe on the calculator, the saved recipes, the saved recipe the
  * calculator was loaded from, whether the user still has to be told that unreadable data was set
- * aside, and the ingredient names offered when adding an ingredient.
+ * aside, and the ingredients offered when adding an ingredient.
  */
 @Serializable
 data class DoughData(
@@ -20,13 +20,14 @@ data class DoughData(
     val resetMessagePending: Boolean = false,
     val loadedRecipeId: String? = null,
     // Unsorted: wherever they are shown, they are sorted.
-    val savedIngredients: List<String> = DefaultSavedIngredients
+    val savedIngredients: List<SavedIngredient> = DefaultSavedIngredients
 ) {
     /** The saved recipe the calculator was loaded from, or `null` once it is deleted. */
     val loadedRecipe: SavedRecipe? get() = savedRecipes.find { it.id == loadedRecipeId }
 }
 
-private val DefaultSavedIngredients = listOf("Olive oil", "Salt", "Yeast")
+private val DefaultSavedIngredients =
+    listOf("Olive oil", "Salt", "Yeast").map { SavedIngredient(it) }
 
 @Serializable
 data class SavedRecipe(val id: String, val name: String, val recipe: DoughRecipe)
@@ -40,8 +41,9 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
     }
 
     /** The saved ingredients, sorted the way they are shown. */
-    val savedIngredients: Flow<List<String>> =
-        data.map { it.savedIngredients.sortedWith(String.CASE_INSENSITIVE_ORDER) }
+    val savedIngredients: Flow<List<SavedIngredient>> = data.map { stored ->
+        stored.savedIngredients.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+    }
 
     /**
      * Saves [recipe] as new and adds [namesToSave] to the saved ingredients, in one write. With
@@ -61,7 +63,7 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
             it.copy(
                 savedRecipes = it.savedRecipes + savedRecipe,
                 loadedRecipeId = if (linkCalculator) savedRecipe.id else it.loadedRecipeId,
-                savedIngredients = it.savedIngredients.withNames(namesToSave)
+                savedIngredients = it.savedIngredients.plusNew(recipe.toSave(namesToSave))
             )
         }
     }
@@ -96,21 +98,21 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
                 savedRecipes = data.savedRecipes.map {
                     if (it.id == id) it.copy(recipe = recipe) else it
                 },
-                savedIngredients = data.savedIngredients.withNames(namesToSave)
+                savedIngredients = data.savedIngredients.plusNew(recipe.toSave(namesToSave))
             )
         }
     }
 
     suspend fun deleteSavedIngredient(name: String) {
         dataStore.updateData { data ->
-            data.copy(savedIngredients = data.savedIngredients - name)
+            data.copy(savedIngredients = data.savedIngredients.filterNot { it.name == name })
         }
     }
 
-    /** Adds [name] back to the saved ingredients, unless it is already there in any case. */
-    suspend fun restoreSavedIngredient(name: String) {
+    /** Adds [ingredient] back to the saved ingredients, unless its name is there in any case. */
+    suspend fun restoreSavedIngredient(ingredient: SavedIngredient) {
         dataStore.updateData { data ->
-            data.copy(savedIngredients = data.savedIngredients.withNames(setOf(name)))
+            data.copy(savedIngredients = data.savedIngredients.plusNew(listOf(ingredient)))
         }
     }
 
@@ -138,11 +140,16 @@ class DoughRepository(private val dataStore: DataStore<DoughData>) {
     }
 }
 
+/** The saved ingredients for [names], measured as they are in this recipe. */
+private fun DoughRecipe.toSave(names: Set<String>): List<SavedIngredient> = names.map { name ->
+    ingredients.firstOrNull { it.name == name }?.toSavedIngredient() ?: SavedIngredient(name)
+}
+
 /**
- * These names plus those of [names] not among them, ignoring case, so a repeated tick or Undo can't
- * add a name twice.
+ * These saved ingredients plus those of [new] whose names aren't among them, ignoring case, so a
+ * repeated tick or Undo can't add a name twice and a saved ingredient never changes.
  */
-private fun List<String>.withNames(names: Set<String>): List<String> =
-    names.fold(this) { saved, name ->
-        if (saved.any { it.isSameNameAs(name) }) saved else saved + name
+private fun List<SavedIngredient>.plusNew(new: List<SavedIngredient>): List<SavedIngredient> =
+    new.fold(this) { saved, ingredient ->
+        if (saved.any { it.name.isSameNameAs(ingredient.name) }) saved else saved + ingredient
     }

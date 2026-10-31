@@ -10,6 +10,8 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -46,7 +48,13 @@ class IngredientsCardTest {
             IngredientsCard(
                 recipe = recipe,
                 editor = editor,
-                savedIngredients = listOf("Honey", "Olive oil", "Salt", "Yeast"),
+                savedIngredients = listOf(
+                    SavedIngredient("Eggs", isCount = true, gramsEachHundredths = 5000),
+                    SavedIngredient("Honey"),
+                    SavedIngredient("Olive oil"),
+                    SavedIngredient("Salt"),
+                    SavedIngredient("Yeast")
+                ),
                 onRecipeChange = { recipe = it },
                 onStartEditing = { editor = IngredientListEditor(recipe.ingredients) },
                 onEditorChange = { editor = it },
@@ -58,6 +66,30 @@ class IngredientsCardTest {
                 }
             )
         }
+    }
+
+    @Test
+    fun countControlFollowsThePortionsAndSetsItsAmountForThem() {
+        recipe = recipe.copy(
+            ingredients = listOf(Ingredient("Eggs", Percentage(0, 0), IngredientCount(4, 4)))
+        )
+        composeRule.onNodeWithText("± 0.5").assertExists()
+        recipe = recipe.copy(portionCount = 3)
+        composeRule.onNodeWithText("1.5").assertExists()
+        composeRule.onNodeWithContentDescription("Increase Eggs").performClick()
+        composeRule.onNodeWithText("2").assertExists()
+        recipe = recipe.copy(portionCount = 6)
+        composeRule.onNodeWithText("4").assertExists()
+    }
+
+    @Test
+    fun editingOffersAKindAndGramsEachForCounts() {
+        composeRule.onNodeWithText("Edit").performClick()
+        composeRule.onAllNodesWithText("Count").onFirst().performClick()
+        composeRule.onNodeWithText("Grams each").assertExists()
+        composeRule.onNodeWithContentDescription("Grams each of Salt").performTextInput("abc")
+        composeRule.onNodeWithText("Enter grams").assertExists()
+        composeRule.onNodeWithText("Done").assertIsNotEnabled()
     }
 
     private fun nameFields() = composeRule.onAllNodes(hasSetTextAction())

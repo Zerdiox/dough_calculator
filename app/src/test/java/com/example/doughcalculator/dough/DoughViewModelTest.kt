@@ -82,18 +82,25 @@ class DoughViewModelTest {
         awaitWrites()
         val data = repository.data.first()
         assertEquals("Honey", data.savedRecipes.last().name)
-        assertEquals(listOf("Olive oil", "Salt", "Yeast", "Honey"), data.savedIngredients)
+        assertEquals(
+            listOf("Olive oil", "Salt", "Yeast", "Honey"),
+            data.savedIngredients.map {
+                it.name
+            }
+        )
     }
 
     @Test
     fun deletedIngredientCanBeRestored() = runBlocking {
         viewModel.deleteSavedIngredient("Salt")
         awaitWrites()
-        assertEquals(listOf("Olive oil", "Yeast"), repository.data.first().savedIngredients)
-        viewModel.restoreSavedIngredient("Salt")
+        assertEquals(listOf("Olive oil", "Yeast"), savedNames())
+        viewModel.restoreSavedIngredient(SavedIngredient("Salt"))
         awaitWrites()
-        assertEquals(listOf("Olive oil", "Yeast", "Salt"), repository.data.first().savedIngredients)
+        assertEquals(listOf("Olive oil", "Yeast", "Salt"), savedNames())
     }
+
+    private suspend fun savedNames() = repository.data.first().savedIngredients.map { it.name }
 
     @Test
     fun startEditingBuildsAnEditorFromTheCalculatorRecipe() {

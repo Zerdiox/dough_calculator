@@ -65,7 +65,7 @@ class DoughRepositoryTest {
         assertEquals(wetter, data.savedRecipes.last().recipe)
         assertEquals(fridayNight.id, data.loadedRecipeId)
         assertEquals(fridayNight.recipe, data.currentRecipe)
-        assertEquals(true, "Malt" in data.savedIngredients)
+        assertEquals(true, SavedIngredient("Malt") in data.savedIngredients)
     }
 
     @Test
@@ -93,13 +93,54 @@ class DoughRepositoryTest {
         assertEquals(before, repository.data.first())
     }
 
+    private val DoughData.savedNames get() = savedIngredients.map { it.name }
+
+    private val withEggs = DefaultDoughRecipe.copy(
+        ingredients = listOf(Ingredient("Eggs", Percentage(0, 0), IngredientCount(4, 4, 5000)))
+    )
+
+    @Test
+    fun tickedCountIsSavedWithItsKindAndGramsEach() = runBlocking {
+        repository.saveRecipe("Eggy", withEggs, namesToSave = setOf("Eggs"))
+        assertEquals(
+            SavedIngredient("Eggs", isCount = true, gramsEachHundredths = 5000),
+            repository.data.first().savedIngredients.last()
+        )
+    }
+
+    @Test
+    fun updatingWithATickedCountSavesItsKindToo() = runBlocking {
+        repository.updateSavedRecipe(fridayNight.id, withEggs, namesToSave = setOf("Eggs"))
+        assertEquals(true, repository.data.first().savedIngredients.last().isCount)
+    }
+
+    @Test
+    fun savingARecipeLeavesAnAlreadySavedIngredientAsItIs() = runBlocking {
+        val saved = SavedIngredient("Eggs", isCount = true, gramsEachHundredths = 5000)
+        repository.restoreSavedIngredient(saved)
+        val heavier = DefaultDoughRecipe.copy(
+            ingredients = listOf(Ingredient("Eggs", Percentage(0, 0), IngredientCount(4, 4, 6000)))
+        )
+        repository.saveRecipe("Heavy", heavier, namesToSave = setOf("Eggs"))
+        assertEquals(saved, repository.data.first().savedIngredients.last())
+    }
+
+    @Test
+    fun restoringBringsBackKindAndGramsEach() = runBlocking {
+        val saved = SavedIngredient("Eggs", isCount = true, gramsEachHundredths = 5000)
+        repository.restoreSavedIngredient(saved)
+        repository.deleteSavedIngredient("Eggs")
+        repository.restoreSavedIngredient(saved)
+        assertEquals(saved, repository.data.first().savedIngredients.last())
+    }
+
     @Test
     fun savingWithNamesStoresTheRecipeAndTheNamesTogether() = runBlocking {
         repository.saveRecipe("Honey", withHoney, namesToSave = setOf("Honey"))
         // One write: the file on disk holds both, not just the data the repository caches.
         val stored = DoughDataSerializer().readFrom(dataFile.inputStream())
         assertEquals(withHoney, stored.savedRecipes.last().recipe)
-        assertEquals(listOf("Olive oil", "Salt", "Yeast", "Honey"), stored.savedIngredients)
+        assertEquals(listOf("Olive oil", "Salt", "Yeast", "Honey"), stored.savedNames)
     }
 
     @Test
@@ -107,19 +148,19 @@ class DoughRepositoryTest {
         repository.updateSavedRecipe(fridayNight.id, withHoney, namesToSave = setOf("Honey"))
         val stored = DoughDataSerializer().readFrom(dataFile.inputStream())
         assertEquals(withHoney, stored.savedRecipes.first().recipe)
-        assertEquals(listOf("Olive oil", "Salt", "Yeast", "Honey"), stored.savedIngredients)
+        assertEquals(listOf("Olive oil", "Salt", "Yeast", "Honey"), stored.savedNames)
     }
 
     @Test
     fun savingWithoutNamesKeepsTheSavedIngredients() = runBlocking {
         repository.saveRecipe("Honey", withHoney, namesToSave = emptySet())
-        assertEquals(listOf("Olive oil", "Salt", "Yeast"), repository.data.first().savedIngredients)
+        assertEquals(listOf("Olive oil", "Salt", "Yeast"), repository.data.first().savedNames)
     }
 
     @Test
     fun addingANameSavedInAnotherCaseChangesNothing() = runBlocking {
         val before = repository.data.first().savedIngredients
-        repository.restoreSavedIngredient("salt")
+        repository.restoreSavedIngredient(SavedIngredient("salt"))
         repository.saveRecipe("Salty", DefaultDoughRecipe, namesToSave = setOf("YEAST"))
         assertEquals(before, repository.data.first().savedIngredients)
     }
@@ -127,9 +168,12 @@ class DoughRepositoryTest {
     @Test
     fun deletedIngredientCanBeAddedBack() = runBlocking {
         repository.deleteSavedIngredient("Salt")
-        assertEquals(listOf("Olive oil", "Yeast"), repository.data.first().savedIngredients)
-        repository.restoreSavedIngredient("Salt")
-        assertEquals(listOf("Olive oil", "Salt", "Yeast"), repository.savedIngredients.first())
+        assertEquals(listOf("Olive oil", "Yeast"), repository.data.first().savedNames)
+        repository.restoreSavedIngredient(SavedIngredient("Salt"))
+        assertEquals(
+            listOf("Olive oil", "Salt", "Yeast"),
+            repository.savedIngredients.first().map { it.name }
+        )
     }
 
     @Test
@@ -145,11 +189,11 @@ class DoughRepositoryTest {
 
     @Test
     fun savedIngredientsAreSortedIgnoringCase() = runBlocking {
-        repository.restoreSavedIngredient("honey")
-        repository.restoreSavedIngredient("Basil")
+        repository.restoreSavedIngredient(SavedIngredient("honey"))
+        repository.restoreSavedIngredient(SavedIngredient("Basil"))
         assertEquals(
             listOf("Basil", "honey", "Olive oil", "Salt", "Yeast"),
-            repository.savedIngredients.first()
+            repository.savedIngredients.first().map { it.name }
         )
     }
 

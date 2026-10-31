@@ -17,23 +17,30 @@ heavy each portion should be, and the app solves for the flour weight that
 produces that total, then scales the rest.
 
 ```
-flour = total dough / (1 + (water + every other ingredient) / 100)
+flour = (total dough - counted weight) / (1 + (water + every other ingredient) / 100)
 ```
+
+Some ingredients are counted rather than weighed, such as eggs. A count follows
+the number of portions and shows to the nearest half. It has an optional weight
+each: filled in, that weight is part of the total; left blank, the ingredient
+has no part in the weights at all.
 
 ## What it does
 
 - **Calculator** for how many portions to make, how heavy each one is, and the
   recipe's percentages. Water is always there; every other ingredient is one
-  you add, name and order yourself. Percentages are typed in, as precisely as
-  the recipe needs, and the weights update as you type.
+  you add, name, order and set as a percentage or a count yourself. Percentages
+  are typed in, as precisely as the recipe needs, and the weights update as you
+  type.
 - **Convert** for recipes written in grams, as books and websites give them.
-  Type in the weights and the portions, and the app works out the baker's
-  percentages, ready to use in the calculator or keep as a saved recipe.
+  Type in the weights, any counts and the portions, and the app works out the
+  baker's percentages, ready to use in the calculator or keep as a saved recipe.
 - **Saved recipes**, each under a name you choose, to follow, load back into
   the calculator to change, or delete.
-- **Saved ingredients**, a short list of names to pick from when adding an
-  ingredient, so the usual ones don't need typing. A name joins the list when
-  you tick it while saving a recipe.
+- **Saved ingredients**, a short list to pick from when adding an ingredient, so
+  the usual ones don't need typing or setting up. One joins the list, with
+  whether it is a count and its weight each, when you tick it while saving a
+  recipe.
 - **Full recipe screen** for while you're actually making the dough. The
   display stays on, and you can change the batch size there without editing
   the saved recipe.

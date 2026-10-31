@@ -40,6 +40,14 @@ internal fun DoughResultCard(recipe: DoughRecipe, modifier: Modifier = Modifier)
                     IngredientRow(row = row)
                 }
             }
+            if (recipe.countsUseUpDough) {
+                Text(
+                    text = "Counted ingredients use up the whole dough weight",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 }
@@ -92,13 +100,15 @@ private fun TotalBar(recipe: DoughRecipe, modifier: Modifier = Modifier) {
     }
 }
 
-/** One table row: a wheat label cell, the baker's percentage, and the weight. */
+/** One table row: a wheat label cell, the baker's percentage or count, and any weight. */
 @Composable
 private fun IngredientRow(row: WeightRow, modifier: Modifier = Modifier) {
-    val target = row.grams.toFloat()
+    val target = (row.grams ?: 0.0).toFloat()
     val grams by animateFloatAsState(targetValue = target, label = "${row.name} grams")
     // Once settled, show the exact weight's text: the Float could round the other way.
-    val gramsText = if (grams == target) row.gramsText else formatGrams(grams.toDouble())
+    val gramsText = row.gramsText?.let {
+        if (grams == target) it else formatGrams(grams.toDouble())
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -127,11 +137,13 @@ private fun IngredientRow(row: WeightRow, modifier: Modifier = Modifier) {
                 .weight(1f)
                 .padding(start = 16.dp)
         )
-        Text(
-            text = gramsText,
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.End,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+        gramsText?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.End,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
     }
 }

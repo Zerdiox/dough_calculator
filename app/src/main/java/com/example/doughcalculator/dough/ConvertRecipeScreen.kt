@@ -10,19 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -46,14 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.doughcalculator.R
@@ -68,7 +58,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ConvertRecipeScreen(
     draft: ConversionDraft,
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     onDraftChange: (ConversionDraft) -> Unit,
     onUseInCalculator: (DoughRecipe) -> Unit,
     onSaveRecipe: (name: String, recipe: DoughRecipe, namesToSave: Set<String>) -> Unit,
@@ -142,7 +132,7 @@ private fun ConvertBody(
     draft: ConversionDraft,
     preview: DoughRecipe?,
     canConvert: Boolean,
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     onDraftChange: (ConversionDraft) -> Unit,
     onSave: () -> Unit,
     onUseInCalculator: () -> Unit,
@@ -199,7 +189,7 @@ private fun RemovalUndo(
 @Composable
 private fun WeightsCard(
     draft: ConversionDraft,
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     onDraftChange: (ConversionDraft) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -225,17 +215,27 @@ private fun WeightsCard(
             rows.items.forEach { row ->
                 // Fields keep their focus and dropdown, which must stay with their row.
                 key(row.key) {
+                    val onRowsChange = { changed: ConvertedRows ->
+                        onDraftChange(draft.copy(rows = changed))
+                    }
                     IngredientWeightRow(
                         row = row,
                         nameError = rows.nameError(row.key),
                         gramsError = draft.rowGramsError(row.key),
-                        offeredNames = rows.offeredNames(row.key, savedIngredients),
-                        onNameChange = {
-                            onDraftChange(draft.copy(rows = rows.rename(row.key, it)))
+                        gramsEachError = draft.rowGramsEachError(row.key),
+                        offeredNames = rows.offeredNames(
+                            row.key,
+                            savedIngredients.map { it.name }
+                        ),
+                        onNameChange = { onRowsChange(rows.rename(row.key, it)) },
+                        onNamePick = { name ->
+                            savedIngredients.firstOrNull { it.name == name }?.let {
+                                onRowsChange(rows.pick(row.key, it))
+                            }
                         },
-                        onGramsChange = {
-                            onDraftChange(draft.copy(rows = rows.changeGrams(row.key, it)))
-                        },
+                        onGramsChange = { onRowsChange(rows.changeGrams(row.key, it)) },
+                        onIsCountChange = { onRowsChange(rows.setCount(row.key, it)) },
+                        onGramsEachChange = { onRowsChange(rows.changeGramsEach(row.key, it)) },
                         onRemove = { onDraftChange(draft.copy(rows = rows.remove(row.key))) }
                     )
                 }
@@ -278,35 +278,48 @@ private fun FixedWeightRow(
     }
 }
 
-/** Another ingredient: its name with the saved names to pick from, its weight and remove. */
+/**
+ * Another ingredient: its name with the saved names to pick from, its amount, remove, and below
+ * them how it is measured.
+ */
 @Composable
 private fun IngredientWeightRow(
     row: ConvertedRow,
     nameError: String?,
     gramsError: String?,
+    gramsEachError: String?,
     offeredNames: List<String>,
     onNameChange: (String) -> Unit,
+    onNamePick: (String) -> Unit,
     onGramsChange: (String) -> Unit,
+    onIsCountChange: (Boolean) -> Unit,
+    onGramsEachChange: (String) -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.Top) {
             NameFieldWithSavedNames(
                 name = row.name,
                 error = nameError,
                 offeredNames = offeredNames,
                 onNameChange = onNameChange,
+                onNamePick = onNamePick,
                 modifier = Modifier
                     .weight(1f)
                     .padding(vertical = CompactFieldInset)
             )
             GramsField(
                 grams = row.grams,
-                description = "Grams of ${row.displayName}",
+                description = if (row.isCount) {
+                    "Amount of ${row.displayName}"
+                } else {
+                    "Grams of ${row.displayName}"
+                },
                 isError = gramsError != null,
                 onGramsChange = onGramsChange,
-                modifier = Modifier.padding(start = 8.dp, top = CompactFieldInset)
+                modifier = Modifier.padding(start = 8.dp, top = CompactFieldInset),
+                unit = if (row.isCount) "" else "g"
             )
             IconButton(onClick = onRemove, modifier = FieldHeight) {
                 Icon(
@@ -316,49 +329,16 @@ private fun IngredientWeightRow(
             }
         }
         FieldError(gramsError)
+        CountChoice(otherLabel = "Grams", isCount = row.isCount, onIsCountChange = onIsCountChange)
+        if (row.isCount) {
+            GramsEachRow(
+                displayName = row.displayName,
+                gramsEach = row.gramsEach,
+                error = gramsEachError,
+                onGramsEachChange = onGramsEachChange
+            )
+        }
     }
-}
-
-/** A weight typed in grams, with "g" after it and a keyboard for decimals. */
-@Composable
-private fun GramsField(
-    grams: String,
-    description: String,
-    isError: Boolean,
-    onGramsChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val focusManager = LocalFocusManager.current
-    CompactTextField(
-        value = grams,
-        onValueChange = onGramsChange,
-        // The row's name is a separate text, so the field carries it for screen readers.
-        modifier = modifier
-            .width(FieldWidth)
-            .semantics { contentDescription = description },
-        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
-        suffix = { Text("g") },
-        isError = isError,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-        singleLine = true
-    )
-}
-
-/** Why a weight can't be used, under its row, where a long message has room. */
-@Composable
-private fun FieldError(error: String?, modifier: Modifier = Modifier) {
-    if (error.isNullOrEmpty()) return
-    Text(
-        text = error,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.error,
-        textAlign = TextAlign.End,
-        modifier = modifier.fillMaxWidth()
-    )
 }
 
 @Composable

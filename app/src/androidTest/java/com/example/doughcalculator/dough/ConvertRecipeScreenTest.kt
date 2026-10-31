@@ -42,7 +42,11 @@ class ConvertRecipeScreenTest {
         composeRule.setContent {
             ConvertRecipeScreen(
                 draft = draft,
-                savedIngredients = listOf("Salt", "Yeast"),
+                savedIngredients = listOf(
+                    SavedIngredient("Salt"),
+                    SavedIngredient("Yeast"),
+                    SavedIngredient("Eggs", isCount = true, gramsEachHundredths = 5000)
+                ),
                 onDraftChange = { draft = it },
                 onUseInCalculator = { used += it },
                 onSaveRecipe = { name, recipe, names -> saves += Triple(name, recipe, names) },
@@ -74,6 +78,21 @@ class ConvertRecipeScreenTest {
         composeRule.onNodeWithText("Save as recipe").assertIsNotEnabled()
         composeRule.onNodeWithText("Use in calculator").assertIsNotEnabled()
         composeRule.onNodeWithText("Add more").assertIsOff()
+    }
+
+    @Test
+    fun choosingCountKeepsTheTextAndAsksForGramsEach() {
+        typeGrams("Flour", "500")
+        typeGrams("Water", "300")
+        addRow("Eggs", "2")
+        composeRule.onNodeWithText("Grams each").assertDoesNotExist()
+        composeRule.onNodeWithText("Count").performClick()
+        composeRule.onNodeWithText("Grams each").assertExists()
+        composeRule.onNodeWithText("× 2").assertExists()
+        composeRule.onNodeWithText("4 × 200 g").assertExists()
+        typeGrams("Grams each of Eggs", "50")
+        composeRule.onNodeWithText("4 × 225 g").assertExists()
+        composeRule.onNodeWithText("100 g").assertExists()
     }
 
     @Test

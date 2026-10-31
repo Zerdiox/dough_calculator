@@ -49,7 +49,7 @@ fun DoughCalculatorContent(
     recipe: DoughRecipe,
     loadedRecipeName: String?,
     ingredientEditor: IngredientListEditor?,
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     resetMessagePending: Boolean,
     onRecipeChange: (DoughRecipe) -> Unit,
     onStartEditing: () -> Unit,
@@ -128,7 +128,7 @@ fun DoughCalculatorContent(
 private fun CalculatorBody(
     recipe: DoughRecipe,
     ingredientEditor: IngredientListEditor?,
-    savedIngredients: List<String>,
+    savedIngredients: List<SavedIngredient>,
     onRecipeChange: (DoughRecipe) -> Unit,
     onStartEditing: () -> Unit,
     onEditorChange: (IngredientListEditor) -> Unit,
