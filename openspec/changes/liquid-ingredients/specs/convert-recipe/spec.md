@@ -1,0 +1,245 @@
+## MODIFIED Requirements
+
+### Requirement: Convert screen
+The calculator SHALL offer a way to open the Convert screen, titled "Convert recipe". The screen
+SHALL show a grams field for Flour, the rows for other ingredients with an "Add ingredient" button,
+the portions, the weights table for the converted recipe, an "Add more" checkbox, a "Save as recipe"
+button and a "Use in calculator" button. Back SHALL return to the calculator without changing
+anything.
+
+#### Scenario: Open the Convert screen
+- **WHEN** the user opens Convert from the calculator
+- **THEN** the screen "Convert recipe" shows an empty Flour field, no other ingredients, the portions
+  and both buttons
+
+#### Scenario: Back changes nothing
+- **WHEN** the user types a recipe on Convert and goes back
+- **THEN** the calculator shows the same values as before
+- **AND** no recipe is saved
+
+### Requirement: Weights in grams
+Every weight on the Convert screen SHALL be typed in grams, with up to two decimals. A comma SHALL
+count as a decimal point. Each field SHALL show "g" after the value. A field holding something else
+SHALL say "Enter grams". Flour SHALL be more than 0 g; at 0 g its field SHALL say "More than 0 g".
+
+#### Scenario: Decimal grams
+- **WHEN** the user types "1,5" for Yeast
+- **THEN** Yeast counts as 1.5 g
+
+#### Scenario: Not a weight
+- **WHEN** the user types "abc" or "1.255" for Salt
+- **THEN** the Salt field says "Enter grams"
+
+#### Scenario: No flour
+- **WHEN** the user types 0 for Flour
+- **THEN** the Flour field says "More than 0 g"
+
+### Requirement: Other ingredients on Convert
+"Add ingredient" SHALL add a row with an empty name field and an empty grams field at the end. Each row SHALL have a remove
+button that takes it out at once and shows a message "Removed "<name>"" with an Undo action, using
+"new ingredient" for a row without a name. Undo SHALL put the row back in its place with its name,
+choice of "Grams", "Liquid" or "Count", amount and grams each. Undo SHALL stay offered for about
+ten seconds, and SHALL end when the user removes another row, saves, uses the recipe in the
+calculator, or leaves the Convert screen. Names SHALL follow the ingredient name rules, and a name
+that breaks them SHALL show why under its field, in the same words as while editing the calculator's
+ingredients. While a name field is focused, a dropdown SHALL offer the saved ingredients the same way
+as when adding an ingredient on the calculator. The rows SHALL stay where they are on the screen when
+their choice changes. The converted recipe SHALL have the liquid rows first, then the others, each group in the
+order shown.
+
+#### Scenario: Add a named ingredient
+- **WHEN** the user taps "Add ingredient", picks Salt from the dropdown and types 15
+- **THEN** the converted recipe has Salt
+
+#### Scenario: Liquid row
+- **WHEN** the user types Flour 500, adds Salt with 15 g, then Beer with 325 g, and sets Beer to
+  "Liquid"
+- **THEN** the weights table lists Flour, Beer, Salt
+- **AND** the row for Beer stays below Salt on the screen
+- **AND** the converted recipe has a hydration of 65%
+
+#### Scenario: Pick a saved liquid
+- **WHEN** Water is saved as a liquid, and the user picks Water on a row holding 325
+- **THEN** the row is set to "Liquid" and still holds 325
+
+#### Scenario: Name already used
+- **WHEN** the rows have Salt and the user names another row "salt"
+- **THEN** the row says ""Salt" is already in this recipe"
+
+#### Scenario: Remove a row
+- **WHEN** the user removes the Salt row
+- **THEN** the converted recipe no longer has Salt
+- **AND** a message says "Removed "Salt"" with an Undo action
+
+#### Scenario: Undo a removal
+- **WHEN** the user removes Salt, the middle of three rows, and taps Undo
+- **THEN** Salt is back in the middle with its name and grams
+
+### Requirement: Percentages from grams
+The percentage of every row set to "Grams" or "Liquid" SHALL be its weight divided by the flour weight, times
+100, rounded half up to two decimals. Its precision SHALL be the fewest decimals the rounded value
+needs, from none to two. A row whose grams field is blank or 0 SHALL be left out of the converted
+recipe. An ingredient that rounds to 0% SHALL be kept at 0%. A percentage above 200% SHALL make that
+row's grams field say "Over 200% of the flour".
+
+#### Scenario: Book recipe
+- **WHEN** the user types Flour 500, Water 325, Salt 15 and Yeast 1
+- **THEN** the converted recipe has Water at 65% with a step of 1, Salt at 3% with a step of 1, and
+  Yeast at 0.2% with a step of 0.1
+
+#### Scenario: Rounded to two decimals
+- **WHEN** the user types Flour 600 and Yeast 1
+- **THEN** Yeast is 0.17% with a step of 0.01
+
+#### Scenario: Empty row left out
+- **WHEN** a row named Honey has no grams
+- **THEN** the converted recipe has no Honey
+
+#### Scenario: Too much of an ingredient
+- **WHEN** the user types Flour 100 and Water 250
+- **THEN** the Water field says "Over 200% of the flour"
+
+### Requirement: Converted recipe preview
+While the flour weight can be used, the Convert screen SHALL show the weights table for the recipe
+made from the input that can be used so far, and update it as soon as any input changes. A row
+whose name or grams can't be used yet, because it is blank or its field shows a message, SHALL be
+left out of the table while the other rows stay. The portion weight in the table SHALL come from the
+weights shown in it, even when the screen says "Portions under 5 g". While the flour weight is blank,
+0 or not a weight, the place of the table SHALL say "Enter the flour weight to see the recipe".
+
+While any field shows a message, the screen says "Portions under 5 g", a name is blank, or Flour is
+blank, both "Save as recipe" and "Use in calculator" SHALL be disabled.
+
+#### Scenario: Live preview
+- **WHEN** the user types Flour 500 and Water 325 with 4 portions
+- **THEN** the weights table reads "4 × 206 g" with Flour and Water rows at 100% and 65%
+
+#### Scenario: Flour alone
+- **WHEN** the user types Flour 500 with 4 portions and no other rows
+- **THEN** the weights table reads "4 × 125 g" with only a Flour row
+
+#### Scenario: Adding an ingredient keeps the table
+- **WHEN** the user has typed Flour 500 and Water 325 with 4 portions and taps "Add ingredient"
+- **THEN** the weights table still reads "4 × 206 g" with Flour and Water rows
+- **AND** both buttons are disabled
+
+#### Scenario: Unfinished input
+- **WHEN** the user has typed Flour 500 and Water 325 with 4 portions, and a row has 15 g but a
+  blank name
+- **THEN** the weights table reads "4 × 206 g" with Flour and Water rows and no row for the 15 g
+- **AND** both buttons are disabled
+
+#### Scenario: A row with a message is left out
+- **WHEN** the user types Flour 100, Water 60 and Salt 250 with 4 portions
+- **THEN** the Salt field says "Over 200% of the flour"
+- **AND** the weights table reads "4 × 40 g" with Flour and Water rows and no Salt row
+- **AND** both buttons are disabled
+
+#### Scenario: Water with a message
+- **WHEN** the user types Flour 500 and "abc" for a row named Water
+- **THEN** the row's field says "Enter grams"
+- **AND** the weights table has no Water row
+- **AND** both buttons are disabled
+
+#### Scenario: Small portions still show
+- **WHEN** the user types Flour 15 and Water 3 with 4 portions
+- **THEN** the screen says "Portions under 5 g"
+- **AND** the weights table reads "4 × 4 g"
+- **AND** both buttons are disabled
+
+#### Scenario: No flour yet
+- **WHEN** the Flour field is blank
+- **THEN** no weights table is shown and its place says "Enter the flour weight to see the recipe"
+- **AND** both buttons are disabled
+
+### Requirement: Use in calculator
+"Use in calculator" SHALL replace all of the calculator's values with the converted recipe, without
+asking, and return to the calculator. A converted recipe SHALL have no note, so the calculator's note
+SHALL be cleared. The calculator SHALL then count as not loaded from any saved recipe, so saving it
+SHALL offer only saving a new recipe.
+
+#### Scenario: Send to the calculator
+- **WHEN** the user converts Flour 500, Water 325 set to Liquid, Salt 15 and Yeast 1 with 4 portions
+  and taps "Use in calculator"
+- **THEN** the calculator shows 4 portions of 210 g, Hydration at 65%, Water at 65%, Salt at 3% and
+  Yeast at 0.2%
+
+#### Scenario: Not linked to the loaded recipe
+- **WHEN** the calculator was loaded from "Friday night" and the user uses a converted recipe in it
+  and then saves
+- **THEN** only saving as a new recipe is offered
+
+#### Scenario: Note is cleared
+- **WHEN** the calculator has a note and the user uses a converted recipe in it
+- **THEN** the Notes field is empty
+
+### Requirement: Save as recipe from Convert
+"Save as recipe" SHALL ask for a name in the same dialog as saving a new recipe on the calculator,
+with the same rules, and save the converted recipe as a new recipe. It SHALL NOT change the
+calculator or which recipe the calculator was loaded from. Cancelling SHALL save nothing.
+
+The "Add more" checkbox SHALL start unticked each time Convert is opened. When it is ticked, saving
+SHALL keep the Convert screen open, clear the Flour field, remove the ingredient rows, keep the
+portions and the tick, and show a message "Saved "<name>"". When it is not ticked, saving SHALL open
+the new recipe's full recipe, titled with its name, and Back from there SHALL return to the
+calculator.
+
+#### Scenario: Save and bake
+- **WHEN** "Add more" is unticked and the user saves the converted recipe as "Book Neapolitan"
+- **THEN** the full recipe of "Book Neapolitan" opens
+- **AND** "Book Neapolitan" is in the saved recipes
+- **AND** Back returns to the calculator with its values unchanged
+
+#### Scenario: Save and convert another
+- **WHEN** "Add more" is ticked and the user saves the converted recipe as "Book Neapolitan"
+- **THEN** Convert stays open with an empty Flour field and no other ingredients
+- **AND** a message confirms "Saved "Book Neapolitan""
+
+#### Scenario: Calculator link unchanged
+- **WHEN** the calculator was loaded from "Friday night" and the user saves a converted recipe
+- **THEN** saving on the calculator still offers to update "Friday night"
+
+### Requirement: Convert input is not remembered
+The Convert screen SHALL keep its input while the phone is rotated. It SHALL start empty each time
+it is opened, including after the app is closed and opened again.
+
+#### Scenario: Opened again
+- **WHEN** the user types a recipe on Convert, goes back and opens Convert again
+- **THEN** the Flour field is empty and there are no other ingredients
+
+### Requirement: Count rows on Convert
+Each other-ingredient row on Convert SHALL offer a choice between "Grams", "Liquid" and "Count", starting
+at "Grams". Changing the choice SHALL keep what is typed. A "Count" row's amount field
+SHALL show no "g", SHALL take a whole or half number up to 100, a comma counting as a decimal point,
+and SHALL otherwise say "Enter 0 to 100, in halves". A "Count" row SHALL also show an optional "Grams each" field, with the same
+rules as other weights on Convert; left blank or at 0, the ingredient SHALL have no grams each. The
+converted recipe SHALL have the ingredient as a count, with the typed amount for the portions on the
+screen. A "Count" row whose amount is blank or 0 SHALL be left out of the converted recipe. A row with
+a message in either field SHALL be left out of the weights table. Picking a saved ingredient SHALL set
+the row to "Count" with its grams each, or to "Grams" or "Liquid", as saved, and SHALL keep
+the amount typed in the row.
+
+#### Scenario: Pick a saved count
+- **WHEN** Eggs is saved as a count with 50 g each, and the user picks Eggs on a row holding 2
+- **THEN** the row is set to "Count" with amount 2 and 50 g each
+
+#### Scenario: Eggs in a book recipe
+- **WHEN** the user types Flour 500 and Water 300, adds Eggs set to "Count" with amount 2 and 50 g
+  each, with 4 portions
+- **THEN** the weights table reads "4 × 225 g" with Flour at 100%, Water at 60% and Eggs "× 2" and
+  "100 g"
+
+#### Scenario: Count without grams each
+- **WHEN** the user types Flour 500 and Water 300, adds Eggs set to "Count" with amount 2 and no
+  grams each, with 4 portions
+- **THEN** the weights table reads "4 × 200 g" with Eggs "× 2" and no weight
+
+#### Scenario: Changing the portions keeps the typed amount
+- **WHEN** the row Eggs has amount 2 and the user changes Convert's portions from 4 to 6
+- **THEN** the weights table still shows Eggs "× 2"
+
+#### Scenario: Amount that can't be used
+- **WHEN** the user types 1.3 for the amount of a "Count" row
+- **THEN** the field says "Enter 0 to 100, in halves"
+- **AND** the weights table has no row for it
+- **AND** both buttons are disabled
